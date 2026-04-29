@@ -1,0 +1,19 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We presented \styleshield{}, a flow-matching-based framework for continuous and controllable AI-to-human text style transfer.
+By combining a pretrained DiT backbone with zero-initialized cross-attention adapters conditioned on frozen Qwen-7B representations, \styleshield{} achieves strong evasion of AIGC detectors ($\geq$90.6\% on the training detector, $\geq$99\% on unseen detectors) while preserving high semantic similarity (0.928).
+The single parameter $\gamma$ provides smooth, monotonic control over the evasion--preservation trade-off, and the allocator algorithm extends this capability to arbitrarily long documents.
+
+\paragraph{Broader Impact and Ethical Considerations.}
+We acknowledge the dual-use nature of this work.
+Our intent is not to facilitate academic dishonesty or content fraud, but rather to expose the fundamental fragility of current AIGC detection paradigms and to stimulate discussion about more robust approaches to content evaluation.
+
+We believe the community should critically examine the prevailing ``detect and punish'' framework:
+\begin{itemize}
+    \item \textbf{The AI--human boundary is dissolving.} As LLMs are trained on human text and humans increasingly write with AI assistance, the stylistic features that detectors exploit become ever less meaningful as markers of ``origin.''
+    \item \textbf{Detection accuracy is insufficient for high-stakes decisions.} Our results show that even training-time detector feedback is not enough to make text reliably detectable, and unseen detectors are trivially evaded. Deploying such tools for academic sanctions or employment decisions is irresponsible.
+    \item \textbf{Content quality should be the standard.} Rather than asking ``was this written by AI?''---a question that is increasingly unanswerable---we should ask ``does this text demonstrate understanding, critical thinking, and originality?'' These are assessable qualities regardless of the writing tool used.
+\end{itemize}
+
+We hope \styleshield{} serves as a catalyst for this shift in perspective, and we release our code anonymously to support reproducibility and further research.

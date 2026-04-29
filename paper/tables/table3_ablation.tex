@@ -1,0 +1,23 @@
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{l c cccc c}
+\toprule
+\textbf{Model Variant} & $\gamma$ & $\pai$$\downarrow$ & \textbf{Evade@0.5}$\uparrow$ & \textbf{Evade@0.3}$\uparrow$ & \textbf{Sem.Sim}$\uparrow$ & \textbf{PPL} \\
+\midrule
+\multirow{2}{*}{Full Model (Layer 14)} 
+& 6.5 & 0.249 & 79.7\% & 72.5\% & 0.935 & 21.1 \\
+& 7.0 & 0.130 & 90.6\% & 86.7\% & 0.928 & 21.2 \\
+\midrule
+\multirow{2}{*}{A1: w/o Detector Reward}
+& 6.5 & 0.145 & 89.4\% & 85.5\% & 0.928 & 26.4 \\
+& 7.0 & 0.086 & 95.4\% & 92.4\% & 0.921 & 26.1 \\
+\midrule
+\multirow{2}{*}{A3: Split Layer 7}
+& 6.5 & 0.014 & 100.0\% & 100.0\% & 0.904 & 99.9 \\
+& 7.0 & 0.011 & 100.0\% & 100.0\% & 0.900 & 106.9 \\
+\bottomrule
+\end{tabular}
+\caption{Ablation study on Det-v3. \textbf{A1}: Removing the detector reward increases raw evasion rates but degrades text quality (higher PPL, lower similarity), showing the reward acts as a quality regularizer. \textbf{A3}: Using shallow Qwen features (layer 7 vs.\ 14) achieves near-perfect evasion but with catastrophic PPL degradation (${\sim}$100 vs.\ ${\sim}$21), confirming that deeper semantic features are essential for preserving fluency. Additional ablations (single-domain training, split layer 21) are in the appendix.}
+\label{tab:ablation}
+\end{table*}

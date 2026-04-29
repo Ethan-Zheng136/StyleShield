@@ -1,0 +1,185 @@
+{
+  "rankings": [
+    {
+      "ckpt": "step_50000",
+      "path": "experiments/styleflow_v2/checkpoints/step_50000.pt",
+      "mean_pai": 0.6425888003967702,
+      "rate_below_50": 36.0,
+      "rate_below_30": 32.0,
+      "std_pai": 0.41606412295352174
+    },
+    {
+      "ckpt": "step_65000",
+      "path": "experiments/styleflow_v2/checkpoints/step_65000.pt",
+      "mean_pai": 0.6472902017086745,
+      "rate_below_50": 38.0,
+      "rate_below_30": 26.0,
+      "std_pai": 0.3985610495801877
+    },
+    {
+      "ckpt": "step_75000",
+      "path": "experiments/styleflow_v2/checkpoints/step_75000.pt",
+      "mean_pai": 0.6561204475350678,
+      "rate_below_50": 34.0,
+      "rate_below_30": 30.0,
+      "std_pai": 0.41720553649381653
+    },
+    {
+      "ckpt": "step_30000",
+      "path": "experiments/styleflow_v2/checkpoints/step_30000.pt",
+      "mean_pai": 0.6562045584432781,
+      "rate_below_50": 34.0,
+      "rate_below_30": 26.0,
+      "std_pai": 0.39846913122046546
+    },
+    {
+      "ckpt": "step_85000",
+      "path": "experiments/styleflow_v2/checkpoints/step_85000.pt",
+      "mean_pai": 0.6562096224352717,
+      "rate_below_50": 34.0,
+      "rate_below_30": 30.0,
+      "std_pai": 0.40500388946452215
+    },
+    {
+      "ckpt": "step_95000",
+      "path": "experiments/styleflow_v2/checkpoints/step_95000.pt",
+      "mean_pai": 0.658380567766726,
+      "rate_below_50": 34.0,
+      "rate_below_30": 28.000000000000004,
+      "std_pai": 0.40700192841306404
+    },
+    {
+      "ckpt": "final",
+      "path": "experiments/styleflow_v2/checkpoints/final.pt",
+      "mean_pai": 0.6604122343286872,
+      "rate_below_50": 34.0,
+      "rate_below_30": 30.0,
+      "std_pai": 0.41952108489047696
+    },
+    {
+      "ckpt": "step_100000",
+      "path": "experiments/styleflow_v2/checkpoints/step_100000.pt",
+      "mean_pai": 0.6604986283741892,
+      "rate_below_50": 30.0,
+      "rate_below_30": 30.0,
+      "std_pai": 0.4162662864729664
+    },
+    {
+      "ckpt": "step_70000",
+      "path": "experiments/styleflow_v2/checkpoints/step_70000.pt",
+      "mean_pai": 0.6643344813212753,
+      "rate_below_50": 34.0,
+      "rate_below_30": 30.0,
+      "std_pai": 0.41054135998995184
+    },
+    {
+      "ckpt": "step_15000",
+      "path": "experiments/styleflow_v2/checkpoints/step_15000.pt",
+      "mean_pai": 0.6647746484726668,
+      "rate_below_50": 34.0,
+      "rate_below_30": 30.0,
+      "std_pai": 0.4007155061813739
+    },
+    {
+      "ckpt": "best_det",
+      "path": "experiments/styleflow_v2/checkpoints/best_det.pt",
+      "mean_pai": 0.6659003565087914,
+      "rate_below_50": 30.0,
+      "rate_below_30": 26.0,
+      "std_pai": 0.39242936881413343
+    },
+    {
+      "ckpt": "step_20000",
+      "path": "experiments/styleflow_v2/checkpoints/step_20000.pt",
+      "mean_pai": 0.6667789612710476,
+      "rate_below_50": 34.0,
+      "rate_below_30": 26.0,
+      "std_pai": 0.3989907419075348
+    },
+    {
+      "ckpt": "step_90000",
+      "path": "experiments/styleflow_v2/checkpoints/step_90000.pt",
+      "mean_pai": 0.669630448333919,
+      "rate_below_50": 34.0,
+      "rate_below_30": 32.0,
+      "std_pai": 0.4191291858496961
+    },
+    {
+      "ckpt": "step_25000",
+      "path": "experiments/styleflow_v2/checkpoints/step_25000.pt",
+      "mean_pai": 0.6696583783067763,
+      "rate_below_50": 32.0,
+      "rate_below_30": 28.000000000000004,
+      "std_pai": 0.40209875152490115
+    },
+    {
+      "ckpt": "step_55000",
+      "path": "experiments/styleflow_v2/checkpoints/step_55000.pt",
+      "mean_pai": 0.6740408039838076,
+      "rate_below_50": 32.0,
+      "rate_below_30": 32.0,
+      "std_pai": 0.4112751308363261
+    },
+    {
+      "ckpt": "step_35000",
+      "path": "experiments/styleflow_v2/checkpoints/step_35000.pt",
+      "mean_pai": 0.6756948951259255,
+      "rate_below_50": 32.0,
+      "rate_below_30": 28.000000000000004,
+      "std_pai": 0.4012865572465785
+    },
+    {
+      "ckpt": "step_45000",
+      "path": "experiments/styleflow_v2/checkpoints/step_45000.pt",
+      "mean_pai": 0.6833949283137918,
+      "rate_below_50": 30.0,
+      "rate_below_30": 26.0,
+      "std_pai": 0.40666469272834765
+    },
+    {
+      "ckpt": "step_80000",
+      "path": "experiments/styleflow_v2/checkpoints/step_80000.pt",
+      "mean_pai": 0.6836396013200283,
+      "rate_below_50": 30.0,
+      "rate_below_30": 28.000000000000004,
+      "std_pai": 0.407378777843621
+    },
+    {
+      "ckpt": "step_10000",
+      "path": "experiments/styleflow_v2/checkpoints/step_10000.pt",
+      "mean_pai": 0.6882777908444404,
+      "rate_below_50": 32.0,
+      "rate_below_30": 24.0,
+      "std_pai": 0.39503432077876266
+    },
+    {
+      "ckpt": "step_40000",
+      "path": "experiments/styleflow_v2/checkpoints/step_40000.pt",
+      "mean_pai": 0.6959048431366682,
+      "rate_below_50": 28.000000000000004,
+      "rate_below_30": 22.0,
+      "std_pai": 0.38782570298815106
+    },
+    {
+      "ckpt": "step_60000",
+      "path": "experiments/styleflow_v2/checkpoints/step_60000.pt",
+      "mean_pai": 0.6997795315273106,
+      "rate_below_50": 30.0,
+      "rate_below_30": 26.0,
+      "std_pai": 0.39771613207611956
+    },
+    {
+      "ckpt": "step_5000",
+      "path": "experiments/styleflow_v2/checkpoints/step_5000.pt",
+      "mean_pai": 0.7429574875533581,
+      "rate_below_50": 26.0,
+      "rate_below_30": 18.0,
+      "std_pai": 0.3451970212855581
+    }
+  ],
+  "config": {
+    "n_samples": 50,
+    "gamma": 5.0,
+    "num_steps": 64
+  }
+}

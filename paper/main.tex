@@ -1,0 +1,52 @@
+\documentclass[11pt]{article}
+
+\usepackage[review]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\newcommand{\styleshield}{\textsc{StyleShield}}
+\newcommand{\langflow}{\textsc{LangFlow}}
+\newcommand{\pai}{P_{\text{AI}}}
+\newcommand{\gammavar}{\gamma}
+
+\title{\styleshield{}: Continuous and Controllable Style Transfer \\
+for Evading AI-Generated Content Detectors}
+
+\author{Anonymous}
+
+\begin{document}
+\maketitle
+
+\input{sections/abstract}
+\input{sections/introduction}
+\input{sections/related_work}
+\input{sections/method}
+\input{sections/experiments}
+\input{sections/analysis}
+\input{sections/conclusion}
+
+\section*{Limitations}
+Our approach currently focuses on Chinese text, and its generalization to other languages remains to be validated.
+The system relies on access to a target AIGC detector during training (though it generalizes to unseen detectors at test time), which may not always be available.
+Additionally, our evaluation of text quality relies primarily on automatic metrics; while perplexity and semantic similarity provide useful proxies, they do not fully capture the nuanced aspects of naturalness that human readers perceive.
+
+\bibliography{references}
+
+\appendix
+\input{sections/appendix}
+
+\end{document}

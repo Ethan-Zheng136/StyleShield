@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{c cc cc}
+\toprule
+\textbf{Target} & \textbf{Achieved} & \textbf{Chunks} & \textbf{Rewrite} & \textbf{Time} \\
+\textbf{Rate} & $\pai$\textbf{(\%)} & \textbf{Rewritten} & \textbf{Ratio} & \textbf{(s)} \\
+\midrule
+10\% & 11.3 & 20 / 23 & 90.5\% & 275 \\
+20\% & 24.4 & 17 / 23 & 77.0\% & 235 \\
+30\% & 33.6 & 15 / 23 & 67.7\% & 208 \\
+40\% & 42.0 & 13 / 23 & 59.0\% & 181 \\
+50\% & 50.6 & 11 / 23 & 50.2\% & 153 \\
+60\% & 64.0 & ~8 / 23 & 36.6\% & 110 \\
+\bottomrule
+\end{tabular}
+\caption{Allocator results on a 10{,}000-character document (23 chunks). The allocator achieves precise control over the document-level detection rate, with achieved rates closely tracking targets. The original document has $\pai{=}99.9\%$. Higher targets require fewer chunk rewrites, resulting in faster processing and higher overall semantic preservation.}
+\label{tab:allocator}
+\end{table}

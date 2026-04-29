@@ -1,0 +1,92 @@
+\section{Extended Ablation Results}
+\label{sec:app_ablation}
+
+Table~\ref{tab:ablation_full} presents the full ablation results across all $\gamma$ values and all four detectors.
+
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{l c cccc cc}
+\toprule
+\textbf{Variant} & $\gamma$ & \textbf{Det-v3}$^*$ & \textbf{Det-v2} & \textbf{ANX} & \textbf{GPT2} & \textbf{Sim} & \textbf{PPL} \\
+\midrule
+\multirow{5}{*}{Full Model}
+& 5.0 & 0.703 & 0.150 & 0.367 & 0.031 & 0.948 & 30.1 \\
+& 5.5 & 0.635 & 0.104 & 0.247 & 0.030 & 0.947 & 22.5 \\
+& 6.0 & 0.481 & 0.036 & 0.100 & 0.014 & 0.942 & 20.3 \\
+& 6.5 & 0.249 & 0.007 & 0.039 & 0.013 & 0.935 & 21.1 \\
+& 7.0 & 0.130 & 0.002 & 0.035 & 0.010 & 0.928 & 21.2 \\
+\midrule
+\multirow{5}{*}{A1: w/o Det.~Reward}
+& 5.0 & 0.710 & 0.133 & 0.363 & 0.036 & 0.946 & 33.1 \\
+& 5.5 & 0.593 & 0.048 & 0.181 & 0.027 & 0.945 & 26.5 \\
+& 6.0 & 0.329 & 0.005 & 0.060 & 0.019 & 0.937 & 26.0 \\
+& 6.5 & 0.145 & 0.001 & 0.031 & 0.010 & 0.928 & 26.4 \\
+& 7.0 & 0.086 & 0.001 & 0.027 & 0.011 & 0.921 & 26.1 \\
+\midrule
+\multirow{5}{*}{A3: Split Layer 7}
+& 5.0 & 0.570 & 0.054 & 0.222 & 0.025 & 0.943 & 44.5 \\
+& 5.5 & 0.268 & 0.002 & 0.061 & 0.010 & 0.932 & 53.9 \\
+& 6.0 & 0.043 & 0.000 & 0.032 & 0.005 & 0.916 & 79.0 \\
+& 6.5 & 0.014 & 0.000 & 0.028 & 0.004 & 0.904 & 99.9 \\
+& 7.0 & 0.011 & 0.000 & 0.026 & 0.002 & 0.900 & 106.9 \\
+\bottomrule
+\end{tabular}
+\caption{Full ablation results ($\pai$ values) across all detectors and $\gamma$ values. Det-v3 (marked $^*$) is the training detector.}
+\label{tab:ablation_full}
+\end{table*}
+
+\section{Allocator Algorithm Details}
+\label{sec:app_allocator}
+
+Algorithm~\ref{alg:allocator} presents the complete allocator procedure.
+
+\begin{algorithm}[t]
+\caption{Allocator for Long-Document Style Transfer}
+\label{alg:allocator}
+\begin{algorithmic}[1]
+\REQUIRE Document $D$, target rate $r_{\text{target}}$, tolerance $\epsilon$, gamma candidates $\Gamma = \{\gamma_1, \ldots, \gamma_m\}$
+\STATE Split $D$ into chunks $\{c_1, \ldots, c_n\}$
+\STATE Compute $s_i \leftarrow \pai(c_i)$ and weights $w_i \leftarrow |c_i| / |D|$
+\STATE $\bar{s} \leftarrow \sum_i w_i \cdot s_i$ \hfill $\triangleright$ weighted avg
+\WHILE{$\bar{s} > r_{\text{target}} + \epsilon$}
+    \STATE $j \leftarrow \arg\max_i s_i$ \hfill $\triangleright$ worst chunk
+    \FOR{$\gamma \in \Gamma$}
+        \STATE $c_j' \leftarrow \text{StyleShield}(c_j, \gamma)$
+        \STATE $s_j' \leftarrow \pai(c_j')$
+        \IF{$s_j' < s_j$}
+            \STATE $c_j \leftarrow c_j'$; $s_j \leftarrow s_j'$
+            \STATE \textbf{break}
+        \ENDIF
+    \ENDFOR
+    \STATE Update $\bar{s} \leftarrow \sum_i w_i \cdot s_i$
+    \IF{overshoot: $\bar{s} < r_{\text{target}} - \epsilon$}
+        \STATE \textbf{break} \hfill $\triangleright$ close enough
+    \ENDIF
+\ENDWHILE
+\RETURN Reassembled document from $\{c_1, \ldots, c_n\}$
+\end{algorithmic}
+\end{algorithm}
+
+\section{Training Details}
+\label{sec:app_training}
+
+\paragraph{Data Construction Pipeline.}
+For each domain, we collect human-written texts and use Qwen-2.5-7B-Instruct with a domain-specific prompt to rewrite them into AI style.
+We then score each generated text with the Det-v3 AIGC detector and filter pairs where $\pai < 0.7$ (indicating the rewrite does not sufficiently exhibit AI characteristics).
+The final dataset composition is:
+\begin{itemize}
+    \item Social Media: ${\sim}$28K pairs
+    \item News: ${\sim}$18K pairs
+    \item Academic: ${\sim}$15K pairs
+\end{itemize}
+
+\paragraph{Compute Resources.}
+Training uses 8$\times$A100 (80GB) GPUs with DDP.
+The full model (100K steps) takes approximately 48 hours.
+Ablation models (60K steps) take approximately 29 hours each.
+Inference (64 Euler steps per sample) takes ${\sim}$6 seconds per sample on a single A100.
+
+\paragraph{Checkpoint Selection.}
+We use a two-phase selection process: (1)~a quick sweep on 50 samples with $\gamma{=}6.5$ using the composite score $(1 - \pai) \times 0.6 + \text{Sim} \times 0.4$, and (2)~full evaluation of the best checkpoint across all $\gamma$ values and detectors.
+For the main model, step 30{,}000 was selected.

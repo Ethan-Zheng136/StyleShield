@@ -1,0 +1,39 @@
+\section{Introduction}
+\label{sec:intro}
+
+The rapid proliferation of large language models (LLMs) has given rise to a burgeoning industry of AI-generated content (AIGC) detectors~\citep{he2023mgtbench, mitchell2023detectgpt, yang2024survey}.
+These tools are now deployed at scale in academic institutions, publishing platforms, and content moderation pipelines, where a positive detection result can carry serious consequences---from academic penalties to content removal.
+Yet this rush to detect has outpaced our understanding of what, exactly, is being measured.
+
+\paragraph{The Detection Fallacy.}
+We argue that the prevailing detector paradigm rests on a fundamentally unstable foundation.
+First, \textbf{the boundary between AI and human text is inherently blurring}: modern LLMs are trained on human-written corpora, and humans increasingly incorporate AI suggestions into their writing workflows.
+The stylistic features that detectors exploit---perplexity patterns, vocabulary distributions, syntactic regularity---reflect tendencies, not categorical distinctions.
+Second, \textbf{commercial incentives distort the landscape}: detection services profit from flagging content as AI-generated, creating systemic bias toward false positives with little accountability for the consequences.
+Third, \textbf{detector reliability is poor in practice}: \citet{sadasivan2023aigenerated} demonstrate that paraphrasing attacks can reduce detection accuracy to near-chance, and cross-domain generalization remains weak~\citep{he2023mgtbench}.
+These observations suggest that judging text by its \emph{origin} rather than its \emph{quality} is both technically fragile and philosophically misguided.
+
+\paragraph{Limitations of Existing Evasion Methods.}
+Prior work on evading AIGC detectors has explored several directions, each with significant drawbacks:
+(1)~\textbf{LLM rewriting} asks another language model to paraphrase the text, but the output often retains or even amplifies characteristic AI patterns (we observe near-zero evasion rates on strong detectors);
+(2)~\textbf{backtranslation} via machine translation introduces semantic drift and unnatural phrasing, achieving moderate evasion at the cost of substantial quality degradation;
+(3)~\textbf{synonym substitution} makes only surface-level lexical changes that barely perturb detector confidence.
+Critically, none of these methods offers \emph{continuous control} over the degree of style transformation---users face a binary choice between the original text and a single, opaque rewrite.
+
+\paragraph{Our Approach.}
+We propose \styleshield{}, a flow-matching-based framework that treats AI-to-human style transfer as a \emph{continuous denoising process}.
+Our key insight is that the SDEdit paradigm~\citep{meng2022sdedit}---adding noise to input data and denoising with a pretrained generative model---can be adapted from images to token embeddings, enabling smooth, controllable style transfer in the continuous embedding space.
+
+Concretely, \styleshield{} builds on a Diffusion Transformer (DiT) backbone pretrained with flow matching on Chinese text~(\langflow{}).
+We augment each DiT block with a \textbf{cross-attention adapter} that attends to frozen hidden states from a Qwen-7B encoder~\citep{qwen2024qwen25}, injecting semantic awareness that preserves the meaning of the source text during denoising.
+These adapters are zero-initialized so the model starts equivalent to the pretrained \langflow{} and gradually learns to incorporate conditioning.
+A \textbf{detector-in-the-loop reward} signal, derived from a BERT-based AIGC detector, provides targeted training feedback that sharpens evasion capability.
+At inference, a single parameter~$\gamma$ controls the noise level and hence the intensity of style transformation, enabling users to navigate the Pareto frontier between evasion strength and semantic preservation.
+
+\paragraph{Contributions.}
+Our main contributions are:
+\begin{enumerate}
+    \item We introduce \styleshield{}, the first flow-matching framework for continuous, controllable AI-to-human text style transfer, achieving state-of-the-art evasion rates ($\geq$90.6\% on the training detector, $\geq$99\% on unseen detectors) while preserving high semantic similarity (0.928) on a 1{,}000-sample multi-domain benchmark.
+    \item We propose a cross-attention conditioning mechanism with zero-initialized adapters that injects frozen LLM representations into a DiT backbone, enabling semantics-aware denoising without fine-tuning the LLM.
+    \item We design an allocator algorithm for long-document style transfer with precise, user-specified detection rate targets, and provide comprehensive ablation studies validating each architectural component.
+\end{enumerate}

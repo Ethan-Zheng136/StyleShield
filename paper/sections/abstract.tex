@@ -1,0 +1,10 @@
+\begin{abstract}
+AI-generated content (AIGC) detectors are increasingly deployed in high-stakes settings such as academic integrity screening, yet mounting evidence questions their reliability and the fundamental soundness of distinguishing AI from human writing.
+We present \styleshield{}, a framework for \emph{continuous and controllable} style transfer that transforms AI-generated text to evade detection while preserving semantic content.
+Built on a Diffusion Transformer (DiT) backbone pretrained with flow matching, \styleshield{} introduces cross-attention adapters conditioned on frozen Qwen-7B hidden representations, enabling semantics-aware denoising.
+At inference, we adopt an SDEdit paradigm: AI text embeddings are noised at a user-controlled intensity $\gamma$ and then denoised with semantic guidance, producing outputs that smoothly interpolate between the original AI style and natural human writing.
+A detector-in-the-loop reward signal during training further sharpens evasion capability without sacrificing fluency.
+On a 1{,}000-sample multi-domain benchmark spanning social media, news, and academic text, \styleshield{} at $\gamma{=}7.0$ achieves a 90.6\% evasion rate against the training detector and $\geq$99\% against three unseen detectors, while maintaining 0.928 semantic similarity---substantially outperforming backtranslation, synonym substitution, and LLM rewriting baselines.
+We additionally propose an \emph{allocator} algorithm for long-document style transfer with precise control over the target detection rate.
+Our work exposes the fragility of current detection paradigms and advocates for rethinking content evaluation beyond binary AI-vs-human labels.
+\end{abstract}

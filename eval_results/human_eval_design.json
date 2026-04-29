@@ -1,0 +1,54 @@
+{
+  "task": "StyleShield Human Evaluation",
+  "description": "评估 AI 文本改写后的质量",
+  "annotators": "3-5 名标注者",
+  "samples": 30,
+  "scoring": {
+    "fluency": {
+      "name": "流畅度",
+      "scale": "1-5",
+      "description": "文本是否通顺、自然、无语法错误",
+      "rubric": {
+        "1": "完全不通顺，无法理解",
+        "2": "有多处语法错误，阅读困难",
+        "3": "基本通顺，有少量不自然之处",
+        "4": "通顺自然，偶有小瑕疵",
+        "5": "完全通顺自然，与人类写作无异"
+      }
+    },
+    "semantic_preservation": {
+      "name": "语义保留",
+      "scale": "1-5",
+      "description": "改写后是否保留了原文的核心意思",
+      "rubric": {
+        "1": "完全偏离原意",
+        "2": "保留了少部分原意",
+        "3": "保留了核心意思，但有遗漏或偏差",
+        "4": "很好地保留了原意，仅有微小差异",
+        "5": "完美保留原意，无任何信息丢失"
+      }
+    },
+    "naturalness": {
+      "name": "自然度（像人写的程度）",
+      "scale": "1-5",
+      "description": "改写后的文本是否像人类写的",
+      "rubric": {
+        "1": "明显是机器生成的",
+        "2": "大部分像机器生成的",
+        "3": "难以判断是人还是机器",
+        "4": "大部分像人写的",
+        "5": "完全像人写的"
+      }
+    }
+  },
+  "procedure": [
+    "1. 随机从测试集中选取 30 个样本",
+    "2. 对每个样本，展示原文（AI生成）和改写后的文本（不告知方法）",
+    "3. 标注者对改写文本的三个维度分别打 1-5 分",
+    "4. 不同方法（StyleShield + 3 baselines）的样本随机混合，标注者不知道哪个是哪个方法",
+    "5. 计算 inter-annotator agreement (Fleiss' kappa)",
+    "6. 对每个方法报告三个维度的 mean ± std"
+  ],
+  "blinding": "Double-blind: 标注者不知道方法名称，样本随机排列",
+  "output_format": "每个标注者一份 CSV，列: sample_id, method (hidden), fluency, semantic, naturalness"
+}

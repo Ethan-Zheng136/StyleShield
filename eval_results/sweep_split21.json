@@ -1,0 +1,60 @@
+{
+  "best": {
+    "step": 5000,
+    "ckpt": "experiments/ablation_split21/checkpoints/step_5000.pt",
+    "mean_pai": 0.0877,
+    "mean_sim": 0.8953,
+    "score": 0.9055
+  },
+  "all": [
+    {
+      "step": 5000,
+      "ckpt": "experiments/ablation_split21/checkpoints/step_5000.pt",
+      "mean_pai": 0.0877,
+      "mean_sim": 0.8953,
+      "score": 0.9055
+    },
+    {
+      "step": 25000,
+      "ckpt": "experiments/ablation_split21/checkpoints/step_25000.pt",
+      "mean_pai": 0.1071,
+      "mean_sim": 0.8989,
+      "score": 0.8953
+    },
+    {
+      "step": 15000,
+      "ckpt": "experiments/ablation_split21/checkpoints/step_15000.pt",
+      "mean_pai": 0.1112,
+      "mean_sim": 0.898,
+      "score": 0.8924
+    },
+    {
+      "step": 10000,
+      "ckpt": "experiments/ablation_split21/checkpoints/step_10000.pt",
+      "mean_pai": 0.132,
+      "mean_sim": 0.9007,
+      "score": 0.8811
+    },
+    {
+      "step": 35000,
+      "ckpt": "experiments/ablation_split21/checkpoints/step_35000.pt",
+      "mean_pai": 0.1342,
+      "mean_sim": 0.8964,
+      "score": 0.878
+    },
+    {
+      "step": 30000,
+      "ckpt": "experiments/ablation_split21/checkpoints/step_30000.pt",
+      "mean_pai": 0.1494,
+      "mean_sim": 0.8989,
+      "score": 0.8699
+    },
+    {
+      "step": 20000,
+      "ckpt": "experiments/ablation_split21/checkpoints/step_20000.pt",
+      "mean_pai": 0.153,
+      "mean_sim": 0.8977,
+      "score": 0.8673
+    }
+  ]
+}

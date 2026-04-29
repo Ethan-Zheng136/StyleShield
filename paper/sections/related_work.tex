@@ -1,0 +1,28 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{AIGC Detection.}
+The detection of AI-generated text has attracted intense research interest.
+Supervised approaches train classifiers---typically BERT-based~\citep{devlin2019bert}---on corpora of human and machine-generated text~\citep{he2023mgtbench}.
+Zero-shot methods exploit statistical properties of model outputs, such as probability curvature~\citep{mitchell2023detectgpt} or watermarking~\citep{kirchenbauer2023watermark}.
+However, mounting evidence challenges the reliability of these approaches: \citet{sadasivan2023aigenerated} show that even simple paraphrasing can dramatically reduce detection accuracy, and cross-domain transfer remains fragile~\citep{he2023mgtbench}.
+\citet{yang2024survey} provide a comprehensive survey highlighting the arms-race dynamics between generators and detectors.
+Our work contributes to this discourse by demonstrating a principled, controllable method that exposes detector vulnerabilities.
+
+\paragraph{Text Style Transfer.}
+Style transfer in NLP aims to modify stylistic attributes (e.g., formality, sentiment, authorship) while preserving content~\citep{lyu2021style}.
+Traditional approaches use variational autoencoders, back-translation, or retrieve-and-edit pipelines.
+More recently, LLM-based rewriting has become a common strategy, though it often introduces its own detectable patterns.
+Our work differs by operating in continuous embedding space rather than at the discrete token level, enabling smooth interpolation between styles.
+
+\paragraph{Diffusion Models for Text.}
+Diffusion models have achieved remarkable success in continuous domains (images, audio) and are increasingly applied to discrete text.
+\citet{li2022diffusion} propose Diffusion-LM for controllable text generation by iterating in embedding space.
+\citet{lou2024discrete} develop MDLM, which estimates data distribution ratios for discrete diffusion.
+\langflow{} extends flow matching~\citep{lipman2023flow} to Chinese text generation with a DiT architecture~\citep{peebles2023scalable} and EDM-style noise schedules~\citep{karras2022elucidating}.
+Our \styleshield{} builds on \langflow{} but introduces a fundamentally different task---\emph{conditional style transfer} rather than unconditional generation---by adding cross-attention conditioning and the SDEdit paradigm~\citep{meng2022sdedit}.
+
+\paragraph{Adversarial Attacks on Text Classifiers.}
+Adversarial NLP research has produced token-level perturbation methods such as TextFooler~\citep{jin2020bert}, which substitute words to flip classifier predictions.
+While effective against specific classifiers, these methods operate at the lexical surface and lack the continuous controllability that \styleshield{} provides through its noise-level parameter~$\gamma$.
+\citet{krishna2024paraphrasing} show that paraphrasing can evade detectors but note that retrieval-based defenses can partially counter this; our cross-attention conditioning approach goes beyond simple paraphrasing by performing semantics-guided generation in embedding space.
