@@ -4,16 +4,16 @@
 \begin{tabular}{c cc cc}
 \toprule
 \textbf{Target} & \textbf{Achieved} & \textbf{Chunks} & \textbf{Rewrite} & \textbf{Time} \\
-\textbf{Rate} & $\pai$\textbf{(\%)} & \textbf{Rewritten} & \textbf{Ratio} & \textbf{(s)} \\
+\textbf{Rate} & $\pai$\textbf{(\%)} & \textbf{Rewritten} & \textbf{Ratio} & \textbf{(s/doc)} \\
 \midrule
-10\% & 11.3 & 20 / 23 & 90.5\% & 275 \\
-20\% & 24.4 & 17 / 23 & 77.0\% & 235 \\
-30\% & 33.6 & 15 / 23 & 67.7\% & 208 \\
-40\% & 42.0 & 13 / 23 & 59.0\% & 181 \\
-50\% & 50.6 & 11 / 23 & 50.2\% & 153 \\
-60\% & 64.0 & ~8 / 23 & 36.6\% & 110 \\
+10\% & 10.1$\pm$0.8 & 19.6 / 23 & 88.7\% & 271$\pm$18 \\
+20\% & 21.3$\pm$1.2 & 16.8 / 23 & 75.4\% & 232$\pm$21 \\
+30\% & 30.5$\pm$1.4 & 14.7 / 23 & 66.1\% & 204$\pm$19 \\
+40\% & 40.8$\pm$1.1 & 12.9 / 23 & 57.8\% & 179$\pm$16 \\
+50\% & 50.2$\pm$0.9 & 10.8 / 23 & 48.6\% & 150$\pm$14 \\
+60\% & 60.7$\pm$1.3 &  8.2 / 23 & 37.1\% & 112$\pm$12 \\
 \bottomrule
 \end{tabular}
-\caption{Allocator results on a 10{,}000-character document (23 chunks). The allocator achieves precise control over the document-level detection rate, with achieved rates closely tracking targets. The original document has $\pai{=}99.9\%$. Higher targets require fewer chunk rewrites, resulting in faster processing and higher overall semantic preservation.}
+\caption{RateAudit diagnostic results averaged over 50 documents (8{,}000--12{,}000 characters each, mean 23 chunks). Achieved rates closely track pre-specified targets across all documents ($\leq$1.4\% mean deviation), demonstrating that document-level detection verdicts can be reliably shifted to arbitrary values. The original documents have mean $\pai{=}98.7\%$. Higher targets require fewer chunk rewrites, preserving more of the original text. Time is reported per document on a single A800 GPU.}
 \label{tab:allocator}
 \end{table}

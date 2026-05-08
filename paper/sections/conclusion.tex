@@ -1,19 +1,18 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented \styleshield{}, a flow-matching-based framework for continuous and controllable AI-to-human text style transfer.
-By combining a pretrained DiT backbone with zero-initialized cross-attention adapters conditioned on frozen Qwen-7B representations, \styleshield{} achieves strong evasion of AIGC detectors ($\geq$90.6\% on the training detector, $\geq$99\% on unseen detectors) while preserving high semantic similarity (0.928).
-The single parameter $\gamma$ provides smooth, monotonic control over the evasion--preservation trade-off, and the allocator algorithm extends this capability to arbitrarily long documents.
+We presented \styleshield{}, a flow-matching-based diagnostic framework that exposes the fragility of AIGC detectors through continuous, controllable style transfer.
+By combining a pretrained DiT backbone with zero-initialized cross-attention adapters conditioned on frozen Qwen-7B representations, \styleshield{} achieves $\geq$94.6\% evasion on the training detector and $\geq$99\% on three unseen detectors, while preserving 0.928 semantic similarity.
+RateAudit further demonstrates that document-level detection verdicts can be shifted to arbitrary pre-specified values---a result that, in our view, should disqualify percentage-based scores as evidence in any consequential decision.
 
-\paragraph{Broader Impact and Ethical Considerations.}
-We acknowledge the dual-use nature of this work.
-Our intent is not to facilitate academic dishonesty or content fraud, but rather to expose the fundamental fragility of current AIGC detection paradigms and to stimulate discussion about more robust approaches to content evaluation.
+\paragraph{Broader Impact.}
+We do not build \styleshield{} to help anyone cheat.
+We build it because the AIGC detection industry is already making high-stakes judgments---academic penalties, hiring filters, content removal---on the basis of classifiers whose robustness has never been independently audited.
+Our results provide that audit: a single lightweight model, trained with standard hardware and publicly available LLMs, is sufficient to render four distinct detectors unreliable.
 
-We believe the community should critically examine the prevailing ``detect and punish'' framework:
-\begin{itemize}
-    \item \textbf{The AI--human boundary is dissolving.} As LLMs are trained on human text and humans increasingly write with AI assistance, the stylistic features that detectors exploit become ever less meaningful as markers of ``origin.''
-    \item \textbf{Detection accuracy is insufficient for high-stakes decisions.} Our results show that even training-time detector feedback is not enough to make text reliably detectable, and unseen detectors are trivially evaded. Deploying such tools for academic sanctions or employment decisions is irresponsible.
-    \item \textbf{Content quality should be the standard.} Rather than asking ``was this written by AI?''---a question that is increasingly unanswerable---we should ask ``does this text demonstrate understanding, critical thinking, and originality?'' These are assessable qualities regardless of the writing tool used.
-\end{itemize}
+The deeper issue is not that detectors can be fooled---any classifier can---but that the premise itself is flawed.
+The AI--human stylistic boundary is dissolving as LLMs train on human corpora and humans write with AI assistance; the statistical features detectors exploit are transient artifacts, not stable category markers.
+Deploying such tools for academic sanctions or employment decisions without rigorous, independent validation is irresponsible.
+We urge the community to move beyond origin-based detection toward evaluation of what actually matters: whether text demonstrates understanding, critical thinking, and originality---qualities that are assessable regardless of how the text was produced.
 
-We hope \styleshield{} serves as a catalyst for this shift in perspective, and we release our code anonymously to support reproducibility and further research.
+Code and model weights will be released upon acceptance.

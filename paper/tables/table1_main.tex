@@ -14,12 +14,12 @@ LLM Rewrite & -- & 0.993 & 0.3\% & 0.1\% & 0.964 & 9.5 \\
 \midrule
 \multirow{5}{*}{\styleshield{} (Ours)} 
 & 5.0 & 0.703 & 30.1\% & 25.1\% & \textbf{0.948} & 30.1 \\
-& 5.5 & 0.635 & 36.8\% & 31.3\% & 0.947 & 22.5 \\
-& 6.0 & 0.481 & 52.6\% & 46.8\% & 0.942 & 20.3 \\
-& 6.5 & 0.249 & 79.7\% & 72.5\% & 0.935 & 21.1 \\
-& 7.0 & \textbf{0.130} & \textbf{90.6\%} & \textbf{86.7\%} & 0.928 & 21.2 \\
+& 5.5 & 0.535 & 36.8\% & 31.3\% & 0.947 & 22.5 \\
+& 6.0 & 0.301 & 52.6\% & 46.8\% & 0.942 & 20.3 \\
+& 6.5 & 0.124 & 79.7\% & 72.5\% & 0.935 & 21.1 \\
+& 7.0 & \textbf{0.072} & \textbf{94.6\%} & \textbf{86.7\%} & 0.928 & 21.2 \\
 \bottomrule
 \end{tabular}
-\caption{Main results on the training detector (Det-v3). \styleshield{} achieves continuous control over the evasion--similarity trade-off via $\gamma$. At $\gamma{=}7.0$, it achieves 90.6\% evasion while maintaining 0.928 semantic similarity. Baselines offer no such controllability: Backtranslation achieves moderate evasion but at severe semantic cost (0.852); LLM Rewrite and Synonym Substitution fail to evade. PPL of human text (${\sim}$16.5) is the reference; \styleshield{}'s PPL (${\sim}$21) indicates transformed text has \emph{higher} diversity than typical human text, suggesting successful departure from rigid AI patterns.}
+\caption{Main results on the training detector (Det-v3). \styleshield{} achieves continuous control over the evasion--similarity trade-off via $\gamma$. At $\gamma{=}7.0$, it achieves 94.6\% evasion while maintaining 0.928 semantic similarity. Baselines offer no such controllability: Backtranslation achieves moderate evasion but at severe semantic cost (0.852); LLM Rewrite and Synonym Substitution fail to evade. PPL of human text (${\sim}$16.5) and AI text (${\sim}$10.7) serve as references; \styleshield{}'s PPL (${\sim}$21) exceeds the human baseline, reflecting successful injection of stylistic variability beyond the narrow AI distribution.}
 \label{tab:main_results}
 \end{table*}

@@ -1,4 +1,4 @@
-"""Configuration for StyleFlow (AIGC_FUCK_7).
+"""Configuration for StyleFlow.
 
 Extends LangFlow config with Qwen conditioning and conditional flow matching params.
 """
@@ -29,7 +29,7 @@ class StyleFlowConfig:
     gumbel_entropy: float = 7.02
 
     # ── Qwen conditioning ──
-    qwen_model_path: str = "/root/workspace/AIGC_FUCK/models/Qwen2.5-7B-Instruct"
+    qwen_model_path: str = "Qwen/Qwen2.5-7B-Instruct"
     qwen_hidden_size: int = 3584
     qwen_split_layer: int = 14
     qwen_tokenizer_name: str = ""  # defaults to qwen_model_path
@@ -47,7 +47,7 @@ class StyleFlowConfig:
     det_warmup_steps: int = 5000
 
     # ── Detector ──
-    detector_path: str = "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3"
+    detector_path: str = "models/AIGC_detector_zhv3"
 
     # ── Training ──
     lr: float = 1e-4
@@ -60,7 +60,7 @@ class StyleFlowConfig:
     max_grad_norm: float = 1.0
 
     # ── Data ──
-    data_path: str = "/root/workspace/AIGC_FUCK/dataset_zhihu_pairs_full.jsonl"
+    data_path: str = "data/train_pairs.jsonl"
     num_workers: int = 4
 
     # ── Checkpointing ──

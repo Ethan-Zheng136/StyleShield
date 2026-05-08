@@ -23,8 +23,8 @@
 \newcommand{\pai}{P_{\text{AI}}}
 \newcommand{\gammavar}{\gamma}
 
-\title{\styleshield{}: Continuous and Controllable Style Transfer \\
-for Evading AI-Generated Content Detectors}
+\title{\styleshield{}: Exposing the Fragility of AIGC Detectors \\
+through Continuous Controllable Style Transfer}
 
 \author{Anonymous}
 
@@ -43,6 +43,8 @@ for Evading AI-Generated Content Detectors}
 Our approach currently focuses on Chinese text, and its generalization to other languages remains to be validated.
 The system relies on access to a target AIGC detector during training (though it generalizes to unseen detectors at test time), which may not always be available.
 Additionally, our evaluation of text quality relies primarily on automatic metrics; while perplexity and semantic similarity provide useful proxies, they do not fully capture the nuanced aspects of naturalness that human readers perceive.
+
+\input{sections/ethics}
 
 \bibliography{references}
 
