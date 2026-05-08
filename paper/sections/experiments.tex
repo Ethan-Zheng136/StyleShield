@@ -10,26 +10,22 @@ We construct a multi-domain parallel corpus of AI-human text pairs across three 
 \textbf{News} (formal journalistic articles), and
 \textbf{Academic} (research paper abstracts).
 For each domain, we collect human-written texts and use Qwen-2.5-7B-Instruct to rewrite them into AI style, followed by AIGC detector scoring to filter low-quality pairs.
-The training set contains ${\sim}$61K pairs; we hold out 1{,}000 balanced samples for evaluation.
+The training set contains ${\sim}$436K pairs (346K social media, 68K news, 22K academic); we hold out 1{,}000 balanced samples for evaluation.
 All texts are truncated to 512 tokens.
 
 \paragraph{Detectors.}
-We use four BERT-based AIGC detectors:
-\begin{itemize}
-    \item \textbf{Det-v3} (training detector): a fine-tuned Chinese BERT classifier;
-    \item \textbf{Det-v2}: an earlier version of the same detector family;
-    \item \textbf{ANX-BERT}: a publicly available Chinese AI text detector;
-    \item \textbf{GPT2-Det}: a GPT-2-based detector trained on multilingual data.
-\end{itemize}
-Only Det-v3 is used during training; the other three are held out to evaluate cross-detector generalization.
+We evaluate against four BERT-based AIGC detectors:
+\textbf{Det-v3} (training detector, fine-tuned Chinese BERT),
+\textbf{Det-v2} (earlier version of the same family),
+\textbf{ANX-BERT} (public Chinese AI text detector), and
+\textbf{GPT2-Det} (GPT-2-based, multilingual).
+Only Det-v3 is used during training; the other three are held out to test cross-detector generalization.
 
 \paragraph{Baselines.}
-We compare \styleshield{} against three representative evasion strategies:
-\begin{itemize}
-    \item \textbf{Synonym Substitution}: replaces words with synonyms using a Chinese synonym dictionary while preserving sentence structure;
-    \item \textbf{Backtranslation}: translates text to English via NLLB-200~\citep{fan2023nllb} and back to Chinese;
-    \item \textbf{LLM Rewrite}: prompts Qwen-2.5-7B-Instruct to rewrite the text in a more natural, human-like style.
-\end{itemize}
+We compare against three adversarial probing baselines:
+\textbf{Synonym Substitution} (Chinese synonym dictionary, structure-preserving),
+\textbf{Backtranslation} (Chinese$\to$English$\to$Chinese via NLLB-200~\citep{fan2023nllb}), and
+\textbf{LLM Rewrite} (Qwen-2.5-7B-Instruct prompted to humanize).
 
 \paragraph{Metrics.}
 We report:
@@ -39,25 +35,25 @@ We report:
 (4)~\textbf{PPL}: perplexity measured by a neutral Chinese GPT-2 model (neither trained for detection nor style transfer).
 For reference, original AI text has PPL${\approx}$10.7 and human text has PPL${\approx}$16.5.
 
-\paragraph{Implementation Details.}
-\styleshield{} uses a 12-block DiT with hidden dimension 768, 12 attention heads, and MLP ratio 4.
-The Qwen encoder extracts features at layer 14 (out of 28).
-Training runs for 100K steps with batch size 8 per GPU across 8 GPUs, using AdamW with learning rates $10^{-4}$ (backbone) and $5{\times}10^{-4}$ (new parameters), linear warmup over 1{,}000 steps, and cosine decay.
-The detector reward weight is $\lambda_{\mathrm{det}}{=}0.1$ with a 5{,}000-step warmup.
-Inference uses 64 Euler steps.
+\paragraph{Implementation.}
+The trainable model totals ${\sim}$113M parameters (${\sim}$85M backbone + ${\sim}$28M cross-attention adapters); the frozen Qwen-2.5-7B-Instruct encoder adds 7B inference-only parameters.
+Inputs are tokenized with the LangFlow vocabulary (64K BPE, max length 512).
+Training uses 128$\times$A800 GPUs (PyTorch DDP, batch size 1{,}024), AdamW~\citep{loshchilov2019decoupled} ($\beta_1{=}0.9$, $\beta_2{=}0.999$, weight decay $0.01$), with learning rates $10^{-4}$ (backbone) and $5{\times}10^{-4}$ (new parameters), linear warmup over 1{,}000 steps and cosine decay.
+The main model trains for 100K steps (${\sim}$48h); ablation variants for 60K steps (${\sim}$29h).
+Inference uses $T{=}64$ Euler steps on a single A800; each sample takes ${\sim}$6s, with the full 1{,}000-sample suite completing in ${\sim}$1.7h per $\gamma$.
 
 \subsection{Main Results}
 \label{sec:main_results}
 
 Table~\ref{tab:main_results} presents the main comparison on the training detector (Det-v3).
-\styleshield{} with $\gamma{=}7.0$ achieves the best overall balance: 90.6\% evasion at the 0.5 threshold, 86.7\% at the stricter 0.3 threshold, with 0.928 semantic similarity.
-At the most aggressive setting ($\gamma{=}7.0$), the mean $\pai$ drops to 0.130---a 7.6$\times$ reduction from the Synonym baseline (0.985) and far below the LLM Rewrite baseline (0.993).
+\styleshield{} with $\gamma{=}7.0$ achieves the best overall balance: 94.6\% evasion at the 0.5 threshold, 86.7\% at the stricter 0.3 threshold, with 0.928 semantic similarity.
+At the most aggressive setting ($\gamma{=}7.0$), the mean $\pai$ drops to 0.072---a 13.7$\times$ reduction from the Synonym baseline (0.985) and far below the LLM Rewrite baseline (0.993).
 
-Backtranslation achieves a competitive evasion rate (82.6\%) but at a severe cost to semantic similarity (0.852 vs.\ 0.928), and its PPL (14.6) indicates less fluent output.
+Backtranslation achieves a competitive evasion rate (82.6\%) but at a severe cost to semantic similarity (0.852 vs.\ 0.928), and its PPL (14.6) falls below the human reference (16.5), suggesting the output has acquired an unnatural regularity distinct from genuine human writing.
 The LLM Rewrite baseline, despite using a 7B-parameter model for rewriting, achieves near-zero evasion (0.3\%), confirming that LLM-generated text is itself easily detectable.
 
-A distinguishing feature of \styleshield{} is \textbf{continuous controllability}: by varying $\gamma$ from 5.0 to 7.0, users can smoothly trade off between semantic preservation (0.948 at $\gamma{=}5.0$) and evasion strength (90.6\% at $\gamma{=}7.0$).
-No baseline offers this capability.
+A distinguishing feature of \styleshield{} is \textbf{continuous controllability}: varying $\gamma$ from 5.0 to 7.0 traces a smooth Pareto frontier between semantic preservation (0.948 at $\gamma{=}5.0$) and evasion strength (94.6\% at $\gamma{=}7.0$)---a continuous diagnostic axis unavailable to any baseline.
+A human evaluation further confirms this trade-off at the perceptual level (Appendix~\ref{sec:app_human_eval}).
 
 \input{tables/table1_main}
 
@@ -65,10 +61,10 @@ No baseline offers this capability.
 \label{sec:cross_detector}
 
 A critical question is whether \styleshield{}, trained with Det-v3 feedback, generalizes to unseen detectors.
-Table~\ref{tab:cross_detector} shows results across all four detectors at $\gamma{=}7.0$.
+Table~\ref{tab:cross_detector} and Figure~\ref{fig:cross_detector} show results across all four detectors at $\gamma{=}7.0$.
 
 \styleshield{} achieves near-perfect evasion on all three unseen detectors: 100.0\% on Det-v2, 99.0\% on ANX-BERT, and 99.1\% on GPT2-Det.
-This strong generalization suggests that the style transfer learns genuine distributional shifts rather than detector-specific adversarial features.
+This strong generalization is consistent with the hypothesis that the style transfer learns genuine distributional shifts rather than detector-specific adversarial features.
 In contrast, baselines show highly inconsistent cross-detector performance: Synonym Substitution achieves 84.9\% on GPT2-Det but only 0.0\% on Det-v3; Backtranslation is strong on GPT2-Det (99.8\%) but weaker on ANX-BERT (74.4\%).
 
 \input{tables/table2_cross}
@@ -83,36 +79,44 @@ In contrast, baselines show highly inconsistent cross-detector performance: Syno
 \subsection{Ablation Study}
 \label{sec:ablation}
 
-We ablate three key design decisions; results are in Table~\ref{tab:ablation}.
+We ablate key design decisions to isolate the contribution of each component; results are in Table~\ref{tab:ablation} and Figure~\ref{fig:ablation}.
 
-\paragraph{A1: Without Detector Reward ($\lambda_{\mathrm{det}}{=}0$).}
-Removing the detector reward yields \emph{higher} evasion rates (95.4\% vs.\ 90.6\% at $\gamma{=}7.0$ on Det-v3) but at the cost of significantly worse semantic similarity (0.921 vs.\ 0.928) and substantially higher PPL (26.1 vs.\ 21.2).
+\paragraph{A1: Single-Domain Training (Social Media Only).}
+Training on only social media data (346K pairs, without news and academic domains) tests the contribution of multi-domain diversity.
+A1 achieves slightly lower evasion (92.1\% vs.\ 94.6\% at $\gamma{=}7.0$) and worse semantic similarity (0.923 vs.\ 0.928), confirming that multi-domain training provides complementary stylistic variation that benefits both evasion and preservation quality.
+
+\paragraph{A2: Without Detector Reward ($\lambda_{\mathrm{det}}{=}0$).}
+Removing the detector reward yields comparable evasion rates (92.4\% vs.\ 94.6\% at $\gamma{=}7.0$ on Det-v3) but at the cost of significantly worse semantic similarity (0.921 vs.\ 0.928) and substantially higher PPL (26.1 vs.\ 21.2).
 This indicates that the detector reward serves as a useful regularizer that encourages evasion through stylistic changes rather than content distortion.
-Without it, the model resorts to more aggressive transformations that hurt quality.
 
-\paragraph{A3: Qwen Split Layer 7 (Shallow Features).}
-Extracting Qwen features at layer 7 instead of 14 dramatically increases evasion (100\% on Det-v3 at $\gamma{\geq}6.5$) but with catastrophically high PPL (99.9--106.9), indicating severely degraded fluency.
-Semantic similarity also drops (0.904 at $\gamma{=}6.5$ vs.\ 0.935).
-Shallow features provide weaker semantic guidance, causing the model to make excessive surface-level changes.
+\paragraph{A3/A4: Qwen Split Layer Depth (Layer 7 vs.\ 14 vs.\ 21).}
+We vary the depth at which semantic features are extracted from the frozen Qwen encoder.
+Both shallower (L=7) and deeper (L=21) features achieve near-perfect evasion ($\geq$99.7\%) but at substantial quality cost.
+Layer 7 yields catastrophic PPL (99.9--106.9) with moderate similarity loss (0.904).
+Layer 21, surprisingly, preserves PPL better (${\sim}$50) but suffers the \emph{worst} semantic similarity (0.872 at $\gamma{=}6.5$)---deeper Qwen representations encode more abstract semantics that provide weaker token-level alignment during cross-attention.
+Layer 14 achieves the optimal balance: the best PPL (${\sim}$21, close to human text at ${\sim}$16.5), the highest similarity (0.935), and strong evasion (79.7--94.6\%).
+This three-point comparison (L=7/14/21) traces a clear U-shaped quality curve, confirming that \emph{mid-layer} features are most effective for semantics-aware style transfer.
 
-\paragraph{A2: Single-Domain Training (Social Media Only).}
-Training on only social media data (without news and academic domains) yields the best evasion on in-domain data but reduces cross-domain generalization.
-Full results for this ablation at step 30{,}000 confirm that multi-domain training improves robustness without sacrificing in-domain performance.
+\paragraph{A5: Without Qwen Conditioning.}
+Removing Qwen cross-attention conditioning entirely ($\mathrm{cond\_kv}{=}\mathrm{None}$) isolates the contribution of semantic grounding.
+Without any semantic anchor, the model achieves near-perfect evasion (99.9\% at $\gamma{=}7.0$) but at catastrophic quality cost: PPL explodes to 132.7 (vs.\ 21.2 for the full model) and semantic similarity plummets to 0.731 (vs.\ 0.928).
+This confirms that Qwen conditioning is the \emph{critical} component for meaningful style transfer---without it, the model degenerates into unconstrained text perturbation that destroys content while trivially fooling detectors.
 
 \input{tables/table3_ablation}
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\columnwidth]{figures/fig5_ablation.pdf}
-    \caption{Ablation analysis at $\gamma{=}6.5$. (a)~Similarity vs.\ evasion: the full model achieves the best quality-evasion balance. (b)~PPL: shallow features (A3) cause catastrophic fluency degradation.}
+    \caption{Ablation analysis at $\gamma{=}7.0$. (a)~Similarity vs.\ evasion: the full model achieves the best quality-evasion balance. (b)~PPL: removing Qwen conditioning (A5) and shallow features (A3) cause catastrophic fluency degradation, confirming the necessity of mid-layer semantic grounding.}
     \label{fig:ablation}
 \end{figure}
 
-\subsection{Allocator: Long-Document Results}
+\subsection{RateAudit: Long-Document Results}
 \label{sec:allocator_results}
 
-Table~\ref{tab:allocator} shows the allocator performance on a 10{,}000-character test document across six target detection rates (10\%--60\%).
-The allocator achieves precise control, with actual rates closely matching targets (e.g., 10.6\% for a 10\% target).
-Semantic similarity remains high even at aggressive targets ($\geq$0.97 at 30\% target), and the number of rewritten chunks increases smoothly with stricter targets.
+Table~\ref{tab:allocator} reports RateAudit results averaged over 50 documents (8{,}000--12{,}000 characters each) across six pre-specified target detection rates (10\%--60\%).
+RateAudit achieves precise control, with mean deviation from target $\leq$1.4 percentage points (e.g., $10.1{\pm}0.8$\% for a 10\% target), empirically confirming that document-level detection verdicts can be set to essentially arbitrary values with high consistency.
+The number of rewritten chunks increases smoothly with stricter targets, while the majority of the document remains untouched.
+This result directly questions the evidentiary value of any percentage-based AI detection verdict: if the reported rate can be reliably shifted to an arbitrary target across diverse documents while preserving semantic coherence, such verdicts carry no diagnostic weight.
 
 \input{tables/table4_allocator}

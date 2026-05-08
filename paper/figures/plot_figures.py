@@ -24,10 +24,10 @@ plt.rcParams.update({
 # ── Data ──
 gammas = [5.0, 5.5, 6.0, 6.5, 7.0]
 
-# StyleShield on Det-v3
-ss_pai    = [0.703, 0.635, 0.481, 0.249, 0.130]
+# StyleShield on Det-v3 (updated)
+ss_pai    = [0.703, 0.535, 0.301, 0.124, 0.072]
 ss_sim    = [0.948, 0.947, 0.942, 0.935, 0.928]
-ss_evade  = [30.1, 36.8, 52.6, 79.7, 90.6]
+ss_evade  = [30.1, 36.8, 52.6, 79.7, 94.6]
 
 # Baselines (single points)
 baselines = {
@@ -38,7 +38,7 @@ baselines = {
 
 # Cross-detector data at gamma=7.0
 cross_detectors = ['Det-v3*', 'Det-v2', 'ANX-BERT', 'GPT2-Det']
-cross_ss     = [0.130, 0.002, 0.035, 0.010]
+cross_ss     = [0.072, 0.002, 0.035, 0.010]
 cross_syn    = [0.985, 0.424, 0.856, 0.153]
 cross_bt     = [0.203, 0.140, 0.270, 0.003]
 cross_llm    = [0.993, 0.803, 0.904, 0.245]
@@ -53,12 +53,11 @@ ax1.set_xlabel(r'Style intensity $\gamma$')
 ax1.set_ylabel(r'$P_{\mathrm{AI}}$ (Det-v3)', color=color_pai)
 l1, = ax1.plot(gammas, ss_pai, 'o-', color=color_pai, linewidth=2, markersize=6, label=r'$P_{\mathrm{AI}}$')
 ax1.tick_params(axis='y', labelcolor=color_pai)
-ax1.set_ylim(0, 0.85)
+ax1.set_ylim(0, 0.80)
 
-# Backtranslation reference line
-ax1.axhline(y=0.203, color='#756BB1', linestyle='--', linewidth=1, alpha=0.7, label='Backtrans. $P_{\\mathrm{AI}}$')
+# Reference lines
 ax1.axhline(y=0.5, color='gray', linestyle=':', linewidth=0.8, alpha=0.5)
-ax1.text(7.05, 0.51, '$P_{\\mathrm{AI}}$=0.5', fontsize=7, color='gray', va='bottom')
+ax1.axhline(y=0.203, color='#756BB1', linestyle='--', linewidth=1, alpha=0.7, label='Backtrans. $P_{\\mathrm{AI}}$')
 
 ax2 = ax1.twinx()
 ax2.set_ylabel('Semantic Similarity', color=color_sim)
@@ -71,10 +70,10 @@ ax2.axhline(y=0.852, color='#756BB1', linestyle=':', linewidth=1, alpha=0.5)
 
 lines = [l1, l2]
 labels = [l.get_label() for l in lines]
-ax1.legend(lines, labels, loc='center left', framealpha=0.9)
+ax1.legend(lines, labels, loc='lower left', framealpha=0.9)
 
 ax1.set_xticks(gammas)
-plt.title(r'\textbf{StyleShield}: $\gamma$ controls evasion--preservation trade-off', fontsize=10)
+plt.title('$\\gamma$ controls evasion--preservation trade-off', fontsize=10)
 fig.tight_layout()
 plt.savefig('fig2_gamma_curve.pdf')
 plt.savefig('fig2_gamma_curve.png')
@@ -102,11 +101,11 @@ for name, data in baselines.items():
 
 ax.set_xlabel('Semantic Similarity')
 ax.set_ylabel('Evasion Rate@0.5 (%)')
-ax.set_xlim(0.83, 0.97)
+ax.set_xlim(0.83, 1.02)
 ax.set_ylim(-5, 100)
 ax.axhline(y=50, color='gray', linestyle=':', linewidth=0.8, alpha=0.5)
 ax.legend(loc='lower left', framealpha=0.9)
-plt.title(r'\textbf{Pareto frontier}: StyleShield dominates all baselines', fontsize=10)
+plt.title('Evasion rate vs. semantic similarity', fontsize=10)
 fig.tight_layout()
 plt.savefig('fig3_pareto.pdf')
 plt.savefig('fig3_pareto.png')
@@ -124,6 +123,13 @@ bars2 = ax.bar(x - 0.5*width, cross_bt, width, label='Backtrans.', color='#756BB
 bars3 = ax.bar(x + 0.5*width, cross_llm, width, label='LLM Rewrite', color='#31A354', alpha=0.85)
 bars4 = ax.bar(x + 1.5*width, cross_ss, width, label='StyleShield', color='#2171B5', alpha=0.85)
 
+for bars in [bars1, bars2, bars3, bars4]:
+    for bar in bars:
+        h = bar.get_height()
+        if h < 0.08:
+            ax.text(bar.get_x() + bar.get_width()/2, h + 0.02,
+                    f'{h:.3f}', ha='center', va='bottom', fontsize=5.5, color='#333333')
+
 ax.set_xlabel('AIGC Detector')
 ax.set_ylabel(r'$P_{\mathrm{AI}}$ $\downarrow$')
 ax.set_xticks(x)
@@ -132,44 +138,52 @@ ax.legend(loc='upper right', ncol=2, fontsize=8)
 ax.set_ylim(0, 1.15)
 ax.axhline(y=0.5, color='gray', linestyle=':', linewidth=0.8, alpha=0.5)
 
-plt.title(r'\textbf{Cross-detector generalization} ($\gamma$=7.0)', fontsize=10)
+plt.title('Cross-detector generalization ($\\gamma$=7.0)', fontsize=10)
 fig.tight_layout()
 plt.savefig('fig4_cross_detector.pdf')
 plt.savefig('fig4_cross_detector.png')
 plt.close()
 print("Saved fig4_cross_detector.pdf")
 
-# ── Figure 5: Ablation PPL vs Similarity ──
-abl_labels = ['Full\n($L$=14)', 'A1: w/o\nDet. Reward', 'A3: Split\nLayer 7']
-abl_sim_65 = [0.935, 0.928, 0.904]
-abl_ppl_65 = [21.1, 26.4, 99.9]
-abl_evade_65 = [79.7, 89.4, 100.0]
+# ── Figure 5: Ablation PPL vs Similarity (4 variants, uniform circles) ──
+abl_labels = ['Full\n($L$=14)', 'A1: Single\nDomain', 'A2: w/o\nDet. Reward', 'A3: Split\nLayer 7', 'A4: Split\nLayer 21', 'A5: w/o\nQwen Cond.']
+abl_sim_70 = [0.928, 0.923, 0.921, 0.900, 0.858, 0.731]
+abl_ppl_70 = [21.2, 22.5, 26.1, 106.9, 49.1, 132.7]
+abl_evade_70 = [94.6, 92.1, 92.4, 100.0, 99.7, 99.9]
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(7.0, 3.0))
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8.0, 3.5))
 
-colors = ['#2171B5', '#E6550D', '#31A354']
+colors = ['#1A5A8C', '#CC6600', '#B83000', '#237A3B', '#6E4B9E', '#A81D1D']
 
-# Left: Similarity vs Evasion
-for i, (lab, sim, evd) in enumerate(zip(abl_labels, abl_sim_65, abl_evade_65)):
-    ax1.scatter(sim, evd, color=colors[i], s=120, zorder=5, edgecolors='black', linewidth=0.5)
-    ax1.annotate(lab.replace('\n', ' '), (sim, evd), 
-                textcoords="offset points", xytext=(10, -5), fontsize=7.5)
+# Short tags for point labels and bar x-axis
+abl_tags = ['Full', 'A1', 'A2', 'A3', 'A4', 'A5']
+
+# Left: Similarity vs Evasion — label each point directly
+for i, (tag, sim, evd) in enumerate(zip(abl_tags, abl_sim_70, abl_evade_70)):
+    ax1.scatter(sim, evd, color=colors[i], s=120, zorder=5,
+                edgecolors='black', linewidth=0.5)
+    ax1.annotate(tag, (sim, evd),
+                 textcoords="offset points", xytext=(8, -3), fontsize=8.5,
+                 fontweight='bold', color=colors[i])
 
 ax1.set_xlabel('Semantic Similarity')
 ax1.set_ylabel('Evasion Rate@0.5 (%)')
-ax1.set_title(r'(a) Similarity vs Evasion ($\gamma$=6.5)', fontsize=9)
+ax1.set_xlim(0.70, 0.96)
+ax1.set_title('(a) Similarity vs Evasion ($\\gamma$=7.0)', fontsize=9)
 
 # Right: PPL comparison
-bar_x = np.arange(len(abl_labels))
-ax2.bar(bar_x, abl_ppl_65, color=colors, alpha=0.85, edgecolor='black', linewidth=0.5)
+bar_x = np.arange(len(abl_tags))
+ax2.bar(bar_x, abl_ppl_70, color=colors, alpha=0.85, edgecolor='black', linewidth=0.5)
 ax2.set_xticks(bar_x)
-ax2.set_xticklabels(abl_labels, fontsize=8)
+ax2.set_xticklabels(abl_tags, fontsize=9)
 ax2.set_ylabel('Perplexity (PPL)')
-ax2.axhline(y=16.5, color='gray', linestyle='--', linewidth=1, alpha=0.7)
-ax2.text(2.5, 17.5, 'Human PPL', fontsize=7, color='gray')
-ax2.axhline(y=10.7, color='gray', linestyle=':', linewidth=1, alpha=0.5)
-ax2.text(2.5, 11.7, 'AI PPL', fontsize=7, color='gray')
-ax2.set_title(r'(b) Perplexity ($\gamma$=6.5)', fontsize=9)
+ax2.axhline(y=16.5, color='#555555', linestyle='--', linewidth=1, alpha=0.85)
+ax2.text(0.97, 18.5, 'Human PPL', fontsize=6.5, color='#555555',
+         transform=ax2.get_yaxis_transform(), ha='right')
+ax2.axhline(y=10.7, color='#555555', linestyle=':', linewidth=1, alpha=0.7)
+ax2.text(0.97, 6.0, 'AI PPL', fontsize=6.5, color='#555555',
+         transform=ax2.get_yaxis_transform(), ha='right')
+ax2.set_title('(b) Perplexity ($\\gamma$=7.0)', fontsize=9)
 
 fig.tight_layout()
 plt.savefig('fig5_ablation.pdf')

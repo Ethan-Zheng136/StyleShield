@@ -32,3 +32,6 @@ paper/*.toc
 # ── Data (too large for git) ──
 *.jsonl
 !configs/*.yaml
+
+# ── Human eval working files ──
+human_eval/

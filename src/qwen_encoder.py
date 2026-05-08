@@ -1,7 +1,6 @@
 """Qwen Encoder Wrapper for StyleFlow.
 
 Extracts hidden states at a configurable split layer from a frozen Qwen model.
-Adapted from AIGC_FUCK_5/src/models/qwen_encoder.py with minimal changes.
 """
 
 from __future__ import annotations

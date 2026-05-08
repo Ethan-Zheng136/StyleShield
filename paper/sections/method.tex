@@ -1,122 +1,284 @@
 \section{Method}
 \label{sec:method}
 
-We present \styleshield{}, a framework for continuous and controllable AI-to-human text style transfer.
-Figure~\ref{fig:architecture} provides an overview.
-The system consists of three components: (1)~a DiT backbone pretrained with flow matching (\S\ref{sec:backbone}), (2)~cross-attention adapters conditioned on a frozen Qwen encoder (\S\ref{sec:conditioning}), and (3)~detector-in-the-loop training with SDEdit-style inference (\S\ref{sec:training}).
-We additionally describe the allocator algorithm for long-document transfer (\S\ref{sec:allocator}).
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\columnwidth]{figures/fig1_architecture.pdf}
+    \caption{Overview of \styleshield{}.
+    A pretrained DiT backbone (left) is augmented with zero-initialized
+    cross-attention adapters that attend to frozen Qwen-7B hidden
+    representations (bottom).
+    At inference (right), AI text embeddings are noised at level~$\gamma$
+    and iteratively denoised with semantic conditioning via 64 Euler steps.
+    The single parameter~$\gamma$ serves as a continuous
+    diagnostic axis for characterizing the
+    evasion--preservation trade-off.}
+    \label{fig:architecture}
+\end{figure}
 
+We present \styleshield{}, a conditional flow-matching framework
+that operates in continuous token-embedding space, designed as
+an adversarial diagnostic for probing AIGC detector robustness.
+The system has three components: a DiT backbone pretrained with
+flow matching (\S\ref{sec:backbone}), cross-attention adapters
+conditioned on a frozen Qwen encoder
+(\S\ref{sec:conditioning}), and a training pipeline with
+detector-in-the-loop feedback (\S\ref{sec:training}).
+At inference a single parameter~$\gamma$ provides continuous
+control over transformation intensity, serving as a diagnostic
+axis for characterizing detector sensitivity
+(\S\ref{sec:inference}).
+We further describe \textbf{RateAudit}, a document-level
+scheduling algorithm that stress-tests whether detection-rate
+verdicts can be set to arbitrary values
+(\S\ref{sec:allocator}).
+Figure~\ref{fig:architecture} shows the overall architecture.
+
+%% ────────────────────────────────────────────────────
 \subsection{Flow Matching Backbone}
 \label{sec:backbone}
 
-\styleshield{} builds on \langflow{}, a Diffusion Transformer (DiT) for Chinese text generation trained with the flow matching objective~\citep{lipman2023flow, karras2022elucidating}.
-The backbone operates in continuous token embedding space: each token $w_i$ is mapped to a $d$-dimensional embedding $\mathbf{e}_i \in \mathbb{R}^d$ via a learned vocabulary embedding layer with normalized embeddings.
+\styleshield{} operates in continuous token-embedding space via
+a Diffusion Transformer
+(DiT;~\citealp{peebles2023scalable}) trained with the flow
+matching objective~\citep{lipman2023flow, karras2022elucidating}.
+
+\paragraph{Embedding space.}
+Each token~$w_i$ is mapped to a $d$-dimensional embedding
+$\mathbf{e}_i \in \mathbb{R}^d$ ($d{=}768$) via a learned
+vocabulary embedding layer.
+Embeddings are length-normalized to stabilize training in the
+continuous space:
+$\bar{\mathbf{e}} = \sqrt{d}\;\mathbf{e}/\|\mathbf{e}\|$.
 
 \paragraph{Architecture.}
-The DiT consists of $N{=}12$ transformer blocks, each containing multi-head self-attention with rotary positional embeddings (RoPE), a feed-forward network (FFN) with GELU activation, and adaptive layer normalization (adaLN-Zero) conditioned on a timestep embedding.
-A sinusoidal timestep embedder maps the noise schedule parameter $\gamma$ to a conditioning vector $\mathbf{c}_\gamma = \mathrm{SiLU}(\mathrm{MLP}(\mathrm{sinusoidal}(\gamma)))$, which modulates each block via learned shift, scale, and gate parameters:
+The DiT consists of $N{=}12$ transformer blocks with
+self-attention (RoPE), FFN (GELU, expansion ratio~4), and
+adaLN-Zero conditioning.
+A timestep embedder maps~$\gamma$ to
+$\mathbf{c}_\gamma$, which modulates each block:
 \begin{equation}
-    \mathbf{x}' = (1 + \mathbf{s}_{\gamma}) \odot \mathrm{LN}(\mathbf{x}) + \mathbf{b}_{\gamma}
+    \mathbf{x}'
+      = (1 + \mathbf{s}_\gamma)
+        \odot \mathrm{LN}(\mathbf{x})
+        + \mathbf{b}_\gamma
 \end{equation}
-where $\mathbf{s}_\gamma, \mathbf{b}_\gamma$ are predicted from $\mathbf{c}_\gamma$.
-A final adaLN layer projects to vocabulary logits.
-The bias skip connection~\citep{karras2022elucidating} adds a residual path: $\mathrm{logits} = f_\theta(\mathbf{z}, \gamma) + c_{\mathrm{skip}}(\gamma) \cdot \mathbf{z} \mathbf{W}_{\mathrm{emb}}^\top$, where $c_{\mathrm{skip}}(\gamma) = \exp\left(\frac{\mathrm{softplus}(-\gamma) - \gamma}{2}\right)$.
-
-\paragraph{Noise Schedule and Gumbel Proposal.}
-Following the EDM formulation~\citep{karras2022elucidating}, the forward noising process at noise level $\gamma$ is:
+where $\mathbf{s}_\gamma, \mathbf{b}_\gamma$ are predicted from
+$\mathbf{c}_\gamma$ via a zero-initialized linear layer.
+We additionally employ a bias skip
+connection~\citep{karras2022elucidating}:
 \begin{equation}
-    \mathbf{z}_\gamma = \alpha(\gamma)\, \mathbf{x} + \sigma(\gamma)\, \boldsymbol{\epsilon}, \quad \boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})
+    \mathrm{logits}
+      = f_\theta(\mathbf{z},\gamma)
+        + c_{\mathrm{skip}}(\gamma)
+          \;\mathbf{z}\,\mathbf{W}_{\mathrm{emb}}^\top
 \end{equation}
-where $\alpha(\gamma) = \sqrt{\text{sigmoid}(-\gamma)}$ and $\sigma(\gamma) = \sqrt{\text{sigmoid}(\gamma)}$.
-During training, noise levels are sampled from a learned Gumbel proposal distribution $\gamma \sim \mathrm{Gumbel}(\mu, \beta)$, which concentrates samples on noise levels where the model learns most efficiently.
+where
+$c_{\mathrm{skip}}(\gamma)
+  = \exp\bigl((\mathrm{softplus}(-\gamma)-\gamma)/2\bigr)$
+provides a direct residual path from the noisy input to the
+output logits, stabilizing training at low noise levels.
 
-\subsection{Qwen Cross-Attention Conditioning}
+\paragraph{Noise schedule and Gumbel proposal.}
+Following the EDM formulation~\citep{karras2022elucidating},
+the forward noising process at noise level~$\gamma$ is:
+\begin{equation}
+    \mathbf{z}_\gamma
+      = \alpha(\gamma)\,\mathbf{x}
+      + \sigma(\gamma)\,\boldsymbol{\epsilon},
+    \quad
+    \boldsymbol{\epsilon}\sim\mathcal{N}(\mathbf{0},\mathbf{I})
+    \label{eq:noise}
+\end{equation}
+where $\alpha(\gamma) = \sqrt{\mathrm{sigmoid}(-\gamma)}$ and
+$\sigma(\gamma) = \sqrt{\mathrm{sigmoid}(\gamma)}$.
+During training, noise levels are sampled from a learned Gumbel
+proposal
+$\gamma \sim \mathrm{Gumbel}(\mu, \beta)$.
+
+%% ────────────────────────────────────────────────────
+\subsection{Cross-Attention Conditioning}
 \label{sec:conditioning}
 
-A key design goal is preserving the semantic content of the source AI text during style transfer.
-We achieve this by conditioning the denoising process on representations extracted from a frozen Qwen-2.5-7B-Instruct model~\citep{qwen2024qwen25}.
+Style transfer, unlike unconditional generation, must preserve
+the semantic content of a \emph{specific} input text.
+We inject this content signal via cross-attention adapters
+conditioned on a frozen large language model.
 
-\paragraph{Qwen Encoder.}
-We extract hidden states at an intermediate layer $L$ of the Qwen model (default $L{=}14$ out of 28 layers).
-The input AI text is tokenized with the Qwen tokenizer and passed through layers $0$ to $L{-}1$; the resulting hidden states $\mathbf{H}_{\mathrm{qwen}} \in \mathbb{R}^{B \times S_q \times 3584}$ serve as semantic conditioning.
-The Qwen model is kept entirely frozen throughout training.
-The choice of split layer $L$ balances between surface-level features (low $L$) and high-level semantics (high $L$); we ablate this choice in \S\ref{sec:ablation}.
+\paragraph{Semantic encoder.}
+We use Qwen-2.5-7B-Instruct~\citep{qwen2024qwen25} as a frozen
+feature extractor.
+The AI-text input is tokenized with the Qwen tokenizer and
+passed through layers~$0$ to~$L{-}1$
+(default $L{=}14$ of 28); the resulting hidden states
+$\mathbf{H}_{\mathrm{qwen}}
+  \!\in\! \mathbb{R}^{B \times S_q \times 3584}$
+encode the semantic content to be preserved.
+A learned projection
+$\mathrm{proj}\!:\!\mathbb{R}^{3584}{\to}\mathbb{R}^{768}$
+maps Qwen features to the DiT hidden dimension.
+The Qwen model is kept entirely frozen throughout training---no
+gradients flow through it.
+The choice of split layer~$L$ trades surface-level fidelity
+against semantic abstraction; we ablate
+$L\!\in\!\{7,14,21\}$ in \S\ref{sec:ablation}, finding
+$L{=}14$ optimal.
 
-\paragraph{Cross-Attention Adapters.}
-We insert a cross-attention adapter module after each DiT self-attention block.
-Each adapter performs multi-head cross-attention where queries come from the flow tokens and keys/values come from the projected Qwen hidden states:
+\paragraph{Adapter architecture.}
+After each DiT self-attention block we insert a
+\textbf{cross-attention adapter}.
+Each adapter performs multi-head cross-attention where queries
+come from the flow tokens and keys/values come from the
+projected Qwen hidden states:
 \begin{align}
-    \mathbf{K}, \mathbf{V} &= \mathrm{split}\!\left(\mathbf{W}_{kv}\, \mathrm{proj}(\mathbf{H}_{\mathrm{qwen}})\right) \\
-    \mathbf{Q} &= \mathbf{W}_q\, \mathrm{LN}(\mathbf{x}) \\
-    \mathbf{x}' &= \mathbf{x} + g(\mathbf{c}_\gamma) \odot \mathrm{Attn}(\mathbf{Q}, \mathbf{K}, \mathbf{V})
+    \mathbf{Q} &= \mathbf{W}_q\;\mathrm{LN}(\mathbf{x}),
+    \quad
+    [\mathbf{K};\mathbf{V}]
+      = \mathbf{W}_{kv}\;\mathrm{proj}(\mathbf{H}_{\mathrm{qwen}})
+    \label{eq:cross-kv}\\[2pt]
+    \mathbf{x}'
+      &= \mathbf{x}
+       + \underbrace{g(\mathbf{c}_\gamma)}_{\text{zero-init gate}}
+         \!\odot\;
+         \mathrm{MHA}(\mathbf{Q},\mathbf{K},\mathbf{V})
+    \label{eq:cross-gate}
 \end{align}
-where $\mathrm{proj}: \mathbb{R}^{3584} \to \mathbb{R}^{768}$ is a learned linear projection (the \texttt{cond\_proj} layer), and $g(\mathbf{c}_\gamma)$ is a \textbf{zero-initialized gate} that depends on the timestep conditioning.
-This zero initialization is critical: at the start of training, the adapters have no effect ($g \equiv \mathbf{0}$), so the model is exactly equivalent to the pretrained \langflow{}.
-The gate gradually opens as training progresses, allowing the model to smoothly learn to incorporate semantic conditioning without catastrophic forgetting of the pretrained generation capability.
+The gate
+$g(\mathbf{c}_\gamma)
+  = \mathbf{W}_g\,\mathbf{c}_\gamma + \mathbf{b}_g$
+is initialized to zero
+($\mathbf{W}_g{=}\mathbf{0},\;\mathbf{b}_g{=}\mathbf{0}$).
+This zero initialization is critical: at the start of training,
+the adapters have no effect ($g \equiv \mathbf{0}$), so the
+model is exactly the pretrained backbone.
+The gates gradually open as training progresses, allowing the
+model to smoothly learn to incorporate semantic conditioning
+without catastrophic forgetting of the pretrained generative
+capability.
+Each adapter adds $\sim$4$d^2$ parameters per block
+($\sim$28M total across 12~blocks), a modest overhead.
 
-\subsection{Training and Inference}
+%% ────────────────────────────────────────────────────
+\subsection{Training}
 \label{sec:training}
 
-\paragraph{Data Construction.}
-We construct parallel AI-human text pairs across three domains: social media discussions, news articles, and academic abstracts.
-For each domain, we collect human-written texts and use Qwen-2.5-7B-Instruct to rewrite them into AI style, producing pairs $(x_{\mathrm{AI}}, x_{\mathrm{human}})$.
-The resulting multi-domain dataset contains approximately 61K pairs.
+\paragraph{Data construction.}
+We construct 436K parallel (AI, human) text pairs across three
+Chinese-language domains---social media (346K), news (68K), and
+academic abstracts (22K).
+For each domain, we collect human-written texts and prompt
+Qwen-2.5-7B-Instruct to rewrite them into AI style.
+Each pair is then scored by the AIGC detector and subjected to
+\textbf{dual-end strict filtering}: we retain only pairs where
+the human side scores $\pai < 0.1$ and the AI side scores
+$\pai > 0.9$, ensuring a clean stylistic separation between
+the two ends of every training pair.
 
-\paragraph{Training Objective.}
-The base training loss is the standard denoising cross-entropy:
+\paragraph{Denoising objective.}
+Given a pair $(x_{\mathrm{AI}}, x_{\mathrm{hu}})$, we embed
+both texts, sample $t\!\sim\!\mathcal{U}(0,1)$ and~$\gamma$
+from the Gumbel proposal, form the noisy input via flow
+interpolation
+$\mathbf{z}
+  = (1{-}t)\,\mathbf{e}_{\mathrm{AI}}
+  + t\,\mathbf{e}_{\mathrm{hu}}$
+followed by noise corruption (Eq.~\ref{eq:noise}), and
+minimize the denoising cross-entropy:
 \begin{equation}
-    \mathcal{L}_{\mathrm{CE}} = -\sum_{i=1}^{L} \log p_\theta(w_i^{\mathrm{hu}} \mid \mathbf{z}_\gamma, \gamma, \mathbf{H}_{\mathrm{qwen}})
+    \mathcal{L}_{\mathrm{CE}}
+      = -\!\sum_{i=1}^{S}
+          \log\, p_\theta\!\bigl(
+            w_i^{\mathrm{hu}}
+            \;\big|\;
+            \mathbf{z}_\gamma,\; \gamma,\;
+            \mathbf{H}_{\mathrm{qwen}}
+          \bigr)
+    \label{eq:ce}
 \end{equation}
-where $\mathbf{z}_\gamma$ is obtained by interpolating between the AI and human token embeddings:
-$\mathbf{z}_\gamma = (1-t) \cdot \mathbf{e}_{\mathrm{AI}} + t \cdot \mathbf{e}_{\mathrm{human}}$
-and adding noise at level $\gamma$.
-The target is the human text $w^{\mathrm{hu}}$.
+The Qwen condition $\mathbf{H}_{\mathrm{qwen}}$ is computed
+from~$x_{\mathrm{AI}}$; thus the model learns to denoise
+toward the human target while attending to the source semantics.
 
-\paragraph{Detector-in-the-Loop Reward.}
-After a warmup period (5{,}000 steps), we introduce an auxiliary reward signal from a BERT-based AIGC detector.
-Every $k$ steps, we perform inference on a batch of AI inputs, run the generated text through the detector, and compute a reward:
+\paragraph{Detector-in-the-loop reward.}
+After a 5{,}000-step warmup we introduce an auxiliary
+adversarial signal from a frozen BERT-based AIGC detector.
+Periodically, we run inference on a training batch, score the
+outputs, and add a reward term:
 \begin{equation}
-    \mathcal{R}_{\mathrm{det}} = 1 - \pai(\hat{x})
+    \mathcal{L}
+      = \mathcal{L}_{\mathrm{CE}}
+      + \lambda_{\mathrm{det}}\;
+        \pai\!\bigl(\hat{x}\bigr),
+    \qquad \lambda_{\mathrm{det}} = 0.1
+    \label{eq:loss}
 \end{equation}
-where $\pai(\hat{x})$ is the detector's estimated probability that the generated text $\hat{x}$ is AI-written.
-This reward is incorporated with weight $\lambda_{\mathrm{det}}{=}0.1$ into the total loss:
-$\mathcal{L} = \mathcal{L}_{\mathrm{CE}} + \lambda_{\mathrm{det}} \cdot (1 - \mathcal{R}_{\mathrm{det}})$.
+where $\pai(\hat{x})$ is the detector's confidence that the
+generated text~$\hat{x}$ is AI-written.
+Rather than simply maximizing evasion, this signal acts as a
+\emph{quality regularizer}: it encourages the model to achieve
+evasion through targeted stylistic shifts rather than content
+distortion, yielding lower perplexity at comparable evasion
+rates (see A2 ablation, \S\ref{sec:ablation}).
 
-\paragraph{SDEdit-Style Inference.}
-At inference time, we perform style transfer using the SDEdit paradigm~\citep{meng2022sdedit} adapted to token embeddings:
-\begin{enumerate}
-    \item Embed the input AI text using the vocabulary embedding layer.
-    \item Add noise at level $\gamma_{\mathrm{start}}$: $\mathbf{z}_0 = \alpha(\gamma_{\mathrm{start}})\, \mathbf{e}_{\mathrm{AI}} + \sigma(\gamma_{\mathrm{start}})\, \boldsymbol{\epsilon}$.
-    \item Iteratively denoise using the EDM Euler sampler over $T{=}64$ steps from $\gamma_{\mathrm{start}}$ down to $\gamma_{\min}$, with Qwen conditioning at each step.
-    \item Decode the final logits via argmax to obtain the transferred text.
-\end{enumerate}
-The parameter $\gamma_{\mathrm{start}}$ acts as a continuous control knob: lower values produce outputs closer to the original AI text (higher semantic preservation, lower evasion), while higher values push the output further toward natural human style (stronger evasion, slightly lower similarity).
+%% ────────────────────────────────────────────────────
+\subsection{SDEdit Inference}
+\label{sec:inference}
 
-\subsection{Allocator: Long-Document Style Transfer}
+At test time we adapt the SDEdit paradigm~\citep{meng2022sdedit}
+to token embeddings:
+(1)~embed the input AI text to obtain
+$\mathbf{e}_{\mathrm{AI}}$ and extract Qwen condition
+$\mathrm{cond\_kv}$;
+(2)~corrupt at level $\gamma_{\mathrm{start}}$:
+$\mathbf{z}_0
+  = \alpha(\gamma_{\mathrm{start}})\,\mathbf{e}_{\mathrm{AI}}
+  + \sigma(\gamma_{\mathrm{start}})\,\boldsymbol{\epsilon}$;
+(3)~apply $T{=}64$ Euler steps conditioning on
+$\mathrm{cond\_kv}$;
+(4)~decode via $\arg\max$.
+The parameter $\gamma_{\mathrm{start}}$ serves as a
+\textbf{continuous diagnostic axis}: low~$\gamma$ yields high
+similarity and low evasion; high~$\gamma$ applies stronger
+transformation at graceful similarity cost---a capability
+fundamentally inaccessible to discrete-token methods.
+
+%% ────────────────────────────────────────────────────
+\subsection{RateAudit: Document-Level Scheduling}
 \label{sec:allocator}
 
-Real-world AIGC detection is often applied to long documents (e.g., essays, reports) that exceed the input length limit of both detectors and our model (typically 512 tokens).
-We propose an \emph{allocator} algorithm that enables style transfer on arbitrarily long texts with a user-specified target detection rate.
+Deployed AIGC detectors typically process documents in
+fixed-length windows ($\leq$512 tokens), then aggregate
+window-level scores into a document verdict.
+\textbf{RateAudit} exploits this aggregation step to
+demonstrate that any pre-specified target detection rate can be
+achieved on arbitrarily long texts while preserving semantic
+coherence---directly questioning the reliability of
+detection-rate-based document verdicts.
 
-\paragraph{Algorithm.}
-Given a document $D$ and a target rate $r_{\mathrm{target}}$:
-\begin{enumerate}
-    \item \textbf{Chunk}: Split $D$ into overlapping chunks $\{c_1, \ldots, c_n\}$ of $\leq$512 tokens.
-    \item \textbf{Score}: Compute $\pai(c_i)$ for each chunk using the AIGC detector.
-    \item \textbf{Prioritize}: Sort chunks by $\pai(c_i)$ in descending order.
-    \item \textbf{Rewrite}: Greedily rewrite the highest-$\pai$ chunks using \styleshield{} with adaptive $\gamma$, re-scoring after each rewrite, until the weighted average $\pai$ across all chunks falls below $r_{\mathrm{target}}$.
+Given document~$D$ and a pre-specified target
+rate~$r_{\mathrm{target}}$:
+\begin{enumerate}\setlength\itemsep{2pt}
+    \item \textbf{Segment.}
+          Split $D$ into chunks
+          $\{c_1, \ldots, c_n\}$ of~$\leq$512 tokens.
+    \item \textbf{Score.}
+          Compute $\pai(c_i)$ for each chunk;
+          aggregate as weighted average
+          $\bar{s} = \sum_i w_i\, \pai(c_i)$ with
+          $w_i = |c_i|/|D|$.
+    \item \textbf{Allocate.}
+          Greedily select the highest-$\pai$ chunk and
+          rewrite it with \styleshield{} using adaptive~$\gamma$
+          ($6.0 \to 6.5 \to 7.0 \to 7.5$), re-scoring after
+          each rewrite.
+    \item \textbf{Terminate.}
+          Stop when
+          $\bar{s} \leq r_{\mathrm{target}} + \epsilon$
+          ($\epsilon{=}0.02$); an overshoot-skip heuristic
+          avoids unnecessary rewrites.
 \end{enumerate}
-The adaptive $\gamma$ strategy starts with a moderate value ($\gamma{=}6.0$) and escalates if the rewritten chunk still exceeds the target, trying $\gamma \in \{6.0, 6.5, 7.0, 7.5\}$ in sequence.
-A tolerance parameter ($\epsilon{=}0.02$) and an overshoot-skip heuristic prevent unnecessary rewrites when the target is nearly met.
+The key empirical insight is that most documents have a small
+number of high-$\pai$ ``hot'' chunks; rewriting only these
+suffices to shift the aggregate score while leaving the majority
+of the document---and its semantic coherence---untouched.
 
-\begin{figure}[t]
-    \centering
-    \fbox{\parbox{0.9\columnwidth}{\centering\small [Architecture diagram placeholder]\\
-    \vspace{2em}
-    DiT backbone with cross-attention adapters\\
-    Qwen encoder $\to$ cond\_proj $\to$ K,V\\
-    SDEdit: noise $\to$ denoise with conditioning\\
-    \vspace{1em}}}
-    \caption{Overview of \styleshield{}: A Diffusion Transformer (DiT) backbone is augmented with cross-attention adapters that attend to frozen Qwen-7B hidden representations. At inference, AI text is embedded, noised at level $\gamma$, and iteratively denoised with semantic conditioning. The single parameter $\gamma$ controls the trade-off between evasion strength and semantic preservation.}
-    \label{fig:architecture}
-\end{figure}
