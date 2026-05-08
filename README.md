@@ -5,7 +5,7 @@
 > EMNLP 2026 Submission
 
 <p align="center">
-  <img src="paper/figures/fig1_architecture.png" width="85%" alt="StyleShield Architecture">
+  <img src="assets/fig1_architecture.png" width="85%" alt="StyleShield Architecture">
 </p>
 
 ## What is StyleShield?
@@ -22,8 +22,8 @@ Built on a Diffusion Transformer (DiT) backbone with flow matching, StyleShield 
 | **γ = 7.0** | 94.6% evade | 100% | 99.0% | 99.1% | 0.928 | 21.2 |
 
 <p align="center">
-  <img src="paper/figures/fig2_gamma_curve.png" width="45%" alt="Gamma Curve">
-  <img src="paper/figures/fig3_pareto.png" width="45%" alt="Pareto Frontier">
+  <img src="assets/fig2_gamma_curve.png" width="45%" alt="Gamma Curve">
+  <img src="assets/fig3_pareto.png" width="45%" alt="Pareto Frontier">
 </p>
 
 **Left**: γ provides smooth, monotonic control over P(AI) and semantic similarity.

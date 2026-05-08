@@ -35,3 +35,6 @@ paper/*.toc
 
 # ── Human eval working files ──
 human_eval/
+
+# ── Paper source (not for public repo) ──
+paper/
