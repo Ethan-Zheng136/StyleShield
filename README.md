@@ -16,10 +16,14 @@ Built on a Diffusion Transformer (DiT) backbone with flow matching, StyleShield 
 
 ### Key Results
 
+<div align="center">
+
 | | Det-v3 (train) | Det-v2 | ANX-BERT | GPT2-Det | Sim | PPL |
 |---|---|---|---|---|---|---|
 | **γ = 6.5** | 87.6% evade | 99.3% | 96.1% | 98.7% | 0.935 | 21.1 |
 | **γ = 7.0** | 94.6% evade | 100% | 99.0% | 99.1% | 0.928 | 21.2 |
+
+</div>
 
 <p align="center">
   <img src="assets/fig2_gamma_curve.png" width="45%" alt="Gamma Curve">
@@ -71,7 +75,7 @@ Model weights are available on HuggingFace Hub (link upon acceptance).
 
 | Checkpoint | Description |
 |---|---|
-| `step_30000.pt` | Full model (multi-domain, Qwen layer 14) |
+| `full_model.pt` | Full model (multi-domain, Qwen layer 14) |
 | `ablation_no_detector/` | A2: without detector reward |
 | `ablation_split7/` | A3: Qwen split layer 7 |
 | `ablation_split21/` | A4: Qwen split layer 21 |
@@ -80,18 +84,3 @@ Model weights are available on HuggingFace Hub (link upon acceptance).
 
 StyleShield includes **RateAudit**, a document-level diagnostic that demonstrates any pre-specified detection rate can be achieved on arbitrarily long texts. Given a target rate (e.g., 30%), RateAudit greedily rewrites only the highest-P(AI) chunks, shifting the aggregate score while leaving the majority of the document untouched.
 
-## Citation
-
-```bibtex
-@inproceedings{styleshield2026,
-  title={StyleShield: Continuous and Controllable Style Transfer
-         for Evading AI-Generated Content Detectors},
-  author={Anonymous},
-  booktitle={EMNLP},
-  year={2026}
-}
-```
-
-## License
-
-MIT
