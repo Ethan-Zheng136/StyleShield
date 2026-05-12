@@ -8,10 +8,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 test_text = "人工智能技术的快速发展对社会产生了深远的影响。"
 
 detectors = [
-    ("zhv3", "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3"),
-    ("zhv2", "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv2"),
-    ("anx-bert", "/root/workspace/AIGC_FUCK/models/chinese-ai-detector-bert"),
-    ("gpt2-det", "/root/workspace/AIGC_FUCK/models/AITextDetector"),
+    ("zhv3", "models/AIGC_detector_zhv3"),
+    ("zhv2", "models/AIGC_detector_zhv2"),
+    ("anx-bert", "models/chinese-ai-detector-bert"),
+    ("gpt2-det", "models/AITextDetector"),
 ]
 
 for name, path in detectors:

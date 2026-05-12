@@ -1,4 +1,4 @@
-"""Qwen Encoder Wrapper for StyleFlow.
+"""Qwen Encoder Wrapper for StyleShield.
 
 Extracts hidden states at a configurable split layer from a frozen Qwen model.
 """

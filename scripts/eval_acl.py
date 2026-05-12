@@ -45,15 +45,15 @@ from transformers import (
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-TEST_SET = "/root/workspace/AIGC_FUCK/test_set_1000.jsonl"
-QWEN_PATH = "/root/workspace/AIGC_FUCK/models/Qwen2.5-7B-Instruct"
-GPT2_PATH = "/root/workspace/AIGC_FUCK/models/gpt2-chinese-cluecorpussmall"
+TEST_SET = "data/test_set_1000.jsonl"
+QWEN_PATH = "models/Qwen2.5-7B-Instruct"
+GPT2_PATH = "models/gpt2-chinese-cluecorpussmall"
 
 DETECTOR_CONFIGS = {
-    "zhv3": {"path": "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3", "ai_idx": 1},
-    "zhv2": {"path": "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv2", "ai_idx": 1},
-    "anx-bert": {"path": "/root/workspace/AIGC_FUCK/models/chinese-ai-detector-bert", "ai_idx": 1},
-    "gpt2-det": {"path": "/root/workspace/AIGC_FUCK/models/AITextDetector", "ai_idx": 0},
+    "zhv3": {"path": "models/AIGC_detector_zhv3", "ai_idx": 1},
+    "zhv2": {"path": "models/AIGC_detector_zhv2", "ai_idx": 1},
+    "anx-bert": {"path": "models/chinese-ai-detector-bert", "ai_idx": 1},
+    "gpt2-det": {"path": "models/AITextDetector", "ai_idx": 0},
 }
 
 GAMMAS = [5.0, 5.5, 6.0, 6.5, 7.0]
@@ -214,13 +214,13 @@ class SynonymBaseline:
 
 class StyleShieldTransfer:
     def __init__(self, ckpt_path: str, device: torch.device):
-        from src.config import StyleFlowConfig
-        from src.model import StyleFlowZh
+        from src.config import StyleShieldConfig
+        from src.model import StyleShieldModel
         from src.qwen_encoder import QwenHiddenExtractor
 
         print(f"[StyleShield] Loading checkpoint: {ckpt_path}")
-        cfg = StyleFlowConfig()
-        model, vocab_size, cfg = StyleFlowZh.from_langflow_ckpt(ckpt_path, cfg, device)
+        cfg = StyleShieldConfig()
+        model, vocab_size, cfg = StyleShieldModel.from_langflow_ckpt(ckpt_path, cfg, device)
         self.model = model.to(device).eval()
         self.cfg = cfg
 
@@ -230,7 +230,7 @@ class StyleShieldTransfer:
         self.qwen_encoder = QwenHiddenExtractor(qwen_raw, split_layer=cfg.qwen_split_layer)
         self.qwen_encoder.eval()
 
-        bert_tok_path = str(Path(__file__).resolve().parent.parent / "tokenizer" / "bert-base-chinese")
+        bert_tok_path = "bert-base-chinese"
         self.bert_tok = AutoTokenizer.from_pretrained(bert_tok_path)
         self.qwen_tok = AutoTokenizer.from_pretrained(
             cfg.qwen_tokenizer_name or cfg.qwen_model_path, trust_remote_code=True
@@ -373,8 +373,8 @@ def run_eval(args):
         qwen_raw = AutoModelForCausalLM.from_pretrained(
             QWEN_PATH, torch_dtype=torch.bfloat16, trust_remote_code=True
         ).to(device)
-        from src.config import StyleFlowConfig
-        cfg = StyleFlowConfig()
+        from src.config import StyleShieldConfig
+        cfg = StyleShieldConfig()
         qwen_enc = QwenHiddenExtractor(qwen_raw, split_layer=cfg.qwen_split_layer)
         qwen_enc.eval()
         qwen_tok = AutoTokenizer.from_pretrained(QWEN_PATH, trust_remote_code=True)

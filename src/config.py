@@ -1,4 +1,4 @@
-"""Configuration for StyleFlow.
+"""Configuration for StyleShield.
 
 Extends LangFlow config with Qwen conditioning and conditional flow matching params.
 """
@@ -7,7 +7,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class StyleFlowConfig:
+class StyleShieldConfig:
     # ── LangFlow backbone (pretrained) ──
     tokenizer_name: str = "bert-base-chinese"
     hidden_size: int = 768

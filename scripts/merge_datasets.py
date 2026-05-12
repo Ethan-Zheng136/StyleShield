@@ -20,8 +20,8 @@ import sys
 from pathlib import Path
 from tqdm import tqdm
 
-DETECTOR_PATH = "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3"
-DATA_DIR = "/root/workspace/AIGC_FUCK"
+DETECTOR_PATH = "models/AIGC_detector_zhv3"
+DATA_DIR = "data/"
 
 
 def load_jsonl(path: str) -> list[dict]:

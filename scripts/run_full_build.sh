@@ -4,13 +4,12 @@
 # 集群上提交命令：
 #   PIP_REQUIRE_VIRTUALENV=false
 #   pip install torch transformers tqdm sentencepiece protobuf
-#   cd /root/workspace/AIGC_FUCK_7
 #   bash scripts/run_full_build.sh 2>&1 | tee /tmp/full_build.log
 
 set -e
-cd /root/workspace/AIGC_FUCK_7
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" && cd "$SCRIPT_DIR/.."
 
-DATA_DIR="/root/workspace/AIGC_FUCK"
+DATA_DIR="data/"
 
 NUM_GPUS=$(nvidia-smi -L 2>/dev/null | wc -l)
 if [ "$NUM_GPUS" -eq 0 ]; then

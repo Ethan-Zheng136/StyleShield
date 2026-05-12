@@ -1,21 +1,21 @@
-# StyleFlow: LangFlow denoising + Qwen cross-attention conditioning
+# StyleShield: LangFlow denoising + Qwen cross-attention conditioning
 # Same training as LangFlow (CE loss on noisy→clean), with Qwen condition.
 # At inference, SDEdit-style transfer (add noise → denoise with condition).
 # ================================================================
 
-# Pretrained LangFlow checkpoint (from scratch, not previous StyleFlow)
-langflow_ckpt: "/root/workspace/AIGC_FUCK_6/experiments/v6/checkpoints/step460000_ckpt.pt"
+# Pretrained LangFlow checkpoint
+langflow_ckpt: "checkpoints/langflow_chinese_pretrain.pt"
 
 # Data
-data_path: "/root/workspace/AIGC_FUCK/dataset_multidomain.jsonl"
+data_path: "data/train_pairs.jsonl"
 model_length: 512
 
 # Qwen encoder
-qwen_model_path: "/root/workspace/AIGC_FUCK/models/Qwen2.5-7B-Instruct"
+qwen_model_path: "models/Qwen2.5-7B-Instruct"
 qwen_split_layer: 14
 
 # AIGC detector
-detector_path: "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3"
+detector_path: "models/AIGC_detector_zhv3"
 
 # Training (16*8=128 GPUs)
 lr: 0.0001

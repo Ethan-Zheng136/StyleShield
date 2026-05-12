@@ -1,4 +1,4 @@
-"""StyleFlow: Conditional Flow Matching for AI-to-Human style transfer.
+"""StyleShield: Conditional Flow Matching for AI-to-Human style transfer.
 
 Builds on top of the pretrained LangFlow Chinese DiT backbone.
 Key additions:
@@ -355,10 +355,10 @@ class GumbelProposal(nn.Module):
 
 
 # ═══════════════════════════════════════════════════════════════════
-#  StyleFlowZh: Main Model
+#  StyleShieldModel: Main Model
 # ═══════════════════════════════════════════════════════════════════
 
-class StyleFlowZh(nn.Module):
+class StyleShieldModel(nn.Module):
     """Conditional Flow Matching for AI→Human style transfer.
 
     Extends pretrained LangFlow with:
@@ -488,7 +488,7 @@ class StyleFlowZh(nn.Module):
     ) -> torch.Tensor:
         """Add noise at level gamma: z_γ = α·x + σ·ε.
 
-        Copied from AIGC_FUCK_6/src/model.py (LangFlowZh.forward_diffusion).
+        Follows LangFlow forward_diffusion logic.
         """
         gamma = gamma.float()
         alpha = torch.sigmoid(-gamma).sqrt()[:, None, None]
@@ -502,7 +502,7 @@ class StyleFlowZh(nn.Module):
     ) -> torch.Tensor:
         """EDM Euler step from gamma=t to gamma=s.
 
-        Copied from AIGC_FUCK_6/src/model.py (LangFlowZh.euler_edm_step).
+        Follows LangFlow euler_edm_step logic.
         """
         t_ = t.double()
         s_ = s.double()
@@ -520,8 +520,8 @@ class StyleFlowZh(nn.Module):
     ) -> torch.LongTensor:
         """SDEdit-style transfer: AI embedding → add noise → denoise with Qwen condition.
 
-        Directly follows AIGC_FUCK_6/scripts/generate.py sdedit_transfer logic.
-        Only difference: forward() receives cond_kv for cross-attention.
+        Follows LangFlow SDEdit transfer logic.
+        Added: forward() receives cond_kv for cross-attention.
 
         Args:
             x_ai_embed: (B, L, D) embedded AI tokens
@@ -568,7 +568,7 @@ class StyleFlowZh(nn.Module):
 
     @classmethod
     def from_langflow_ckpt(cls, ckpt_path: str, cfg, device: torch.device = None):
-        """Load pretrained LangFlow weights into StyleFlowZh.
+        """Load pretrained LangFlow weights into StyleShieldModel.
 
         Cross-attention adapters and cond_proj are initialized fresh
         (zero-init for adapters, random for cond_proj).
@@ -601,7 +601,7 @@ class StyleFlowZh(nn.Module):
                 skipped += 1
 
         model.load_state_dict(model_state)
-        print(f"[StyleFlow] Loaded {loaded} params from LangFlow, "
+        print(f"[StyleShield] Loaded {loaded} params from LangFlow, "
               f"skipped {skipped}, new params: "
               f"{len(model_state) - loaded}")
 

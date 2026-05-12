@@ -1,7 +1,7 @@
 """SDEdit-style transfer with Qwen conditioning and detector evaluation.
 
-Uses the same denoising procedure as the original LangFlow SDEdit
-(AIGC_FUCK_6/scripts/generate.py), with Qwen cross-attention conditioning.
+Uses the same denoising procedure as the original LangFlow SDEdit,
+with Qwen cross-attention conditioning.
 
 Usage:
     python scripts/transfer.py \
@@ -30,8 +30,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSequen
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.config import StyleFlowConfig
-from src.model import StyleFlowZh
+from src.config import StyleShieldConfig
+from src.model import StyleShieldModel
 from src.qwen_encoder import QwenHiddenExtractor
 
 
@@ -72,9 +72,9 @@ class AIGCDetector:
 # ═══════════════════════════════════════════════════════════════════
 
 def load_pipeline(ckpt_path: str, device: torch.device):
-    """Load StyleFlow model + Qwen encoder from checkpoint."""
-    cfg = StyleFlowConfig()
-    model, vocab_size, cfg = StyleFlowZh.from_langflow_ckpt(ckpt_path, cfg, device)
+    """Load StyleShield model + Qwen encoder from checkpoint."""
+    cfg = StyleShieldConfig()
+    model, vocab_size, cfg = StyleShieldModel.from_langflow_ckpt(ckpt_path, cfg, device)
     model = model.to(device).eval()
 
     print(f"Loading Qwen encoder from {cfg.qwen_model_path}")
@@ -86,7 +86,7 @@ def load_pipeline(ckpt_path: str, device: torch.device):
     qwen_encoder = QwenHiddenExtractor(qwen_raw, split_layer=cfg.qwen_split_layer)
     qwen_encoder.eval()
 
-    bert_tok_path = str(Path(__file__).resolve().parent.parent / "tokenizer" / "bert-base-chinese")
+    bert_tok_path = "bert-base-chinese"
     bert_tokenizer = AutoTokenizer.from_pretrained(bert_tok_path)
     qwen_tok_path = cfg.qwen_tokenizer_name or cfg.qwen_model_path
     qwen_tokenizer = AutoTokenizer.from_pretrained(qwen_tok_path, trust_remote_code=True)
@@ -97,7 +97,7 @@ def load_pipeline(ckpt_path: str, device: torch.device):
 @torch.no_grad()
 def transfer_text(
     text: str,
-    model: StyleFlowZh,
+    model: StyleShieldModel,
     qwen_encoder: QwenHiddenExtractor,
     bert_tokenizer,
     qwen_tokenizer,
@@ -144,8 +144,8 @@ def transfer_text(
 # ═══════════════════════════════════════════════════════════════════
 
 def main():
-    parser = argparse.ArgumentParser(description="StyleFlow Transfer")
-    parser.add_argument("--ckpt", type=str, required=True, help="StyleFlow checkpoint")
+    parser = argparse.ArgumentParser(description="StyleShield Transfer")
+    parser.add_argument("--ckpt", type=str, required=True, help="StyleShield checkpoint")
     parser.add_argument("--input", type=str, default=None, help="Input AI text")
     parser.add_argument("--input_file", type=str, default=None, help="Input file (one text)")
     parser.add_argument("--gamma", type=float, default=5.0,

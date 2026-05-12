@@ -1,14 +1,14 @@
-"""Training script for StyleFlow: LangFlow denoising + Qwen cross-attention.
+"""Training script for StyleShield: LangFlow denoising + Qwen cross-attention.
 
 Same training objective as original LangFlow (CE loss on noisy→clean),
 but with Qwen encoder providing cross-attention conditioning.
 At inference, SDEdit-style transfer is used (add noise → denoise with condition).
 
 Usage (single-node multi-GPU):
-    torchrun --nproc_per_node=8 scripts/train_styleflow.py --config configs/styleflow.yaml
+    torchrun --nproc_per_node=8 scripts/train.py --config configs/styleshield.yaml
 
 Usage (single GPU):
-    python scripts/train_styleflow.py --config configs/styleflow.yaml
+    python scripts/train.py --config configs/styleshield.yaml
 """
 
 from __future__ import annotations
@@ -32,9 +32,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, AutoModelForSequen
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.config import StyleFlowConfig
+from src.config import StyleShieldConfig
 from src.dataset import PairDataset
-from src.model import StyleFlowZh
+from src.model import StyleShieldModel
 from src.qwen_encoder import QwenHiddenExtractor
 
 logging.basicConfig(
@@ -42,7 +42,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-log = logging.getLogger("StyleFlow")
+log = logging.getLogger("StyleShield")
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -65,8 +65,8 @@ def is_main():
     return rank() == 0
 
 
-def load_config(yaml_path: str) -> StyleFlowConfig:
-    cfg = StyleFlowConfig()
+def load_config(yaml_path: str) -> StyleShieldConfig:
+    cfg = StyleShieldConfig()
     if yaml_path and os.path.exists(yaml_path):
         with open(yaml_path, "r") as f:
             overrides = yaml.safe_load(f)
@@ -81,7 +81,7 @@ def load_config(yaml_path: str) -> StyleFlowConfig:
 
 
 
-def get_scheduler(optimizer, cfg: StyleFlowConfig):
+def get_scheduler(optimizer, cfg: StyleShieldConfig):
     """Cosine-annealing with linear warmup."""
     warmup = torch.optim.lr_scheduler.LinearLR(
         optimizer, start_factor=1e-8, end_factor=1.0,
@@ -140,7 +140,7 @@ class AIGCDetector:
 #  Training Loop
 # ═══════════════════════════════════════════════════════════════════
 
-def train(cfg: StyleFlowConfig):
+def train(cfg: StyleShieldConfig):
     # ── DDP setup ──
     local_rank = int(os.environ.get("LOCAL_RANK", 0))
     if "WORLD_SIZE" in os.environ and int(os.environ["WORLD_SIZE"]) > 1:
@@ -150,13 +150,13 @@ def train(cfg: StyleFlowConfig):
 
     if is_main():
         log.info("=" * 60)
-        log.info("  StyleFlow: Conditional Flow Matching Training")
+        log.info("  StyleShield: Conditional Flow Matching Training")
         log.info("=" * 60)
 
-    # ── Load pretrained LangFlow → StyleFlowZh ──
+    # ── Load pretrained LangFlow → StyleShieldModel ──
     if is_main():
         log.info(f"Loading LangFlow from {cfg.langflow_ckpt}")
-    model, vocab_size, cfg = StyleFlowZh.from_langflow_ckpt(
+    model, vocab_size, cfg = StyleShieldModel.from_langflow_ckpt(
         cfg.langflow_ckpt, cfg, device=device,
     )
     model = model.to(device)
@@ -183,15 +183,17 @@ def train(cfg: StyleFlowConfig):
         log.info(f"Qwen encoder: split_layer={cfg.qwen_split_layer}, "
                  f"hidden_size={qwen_encoder.hidden_size}")
 
-    # ── Detector (only on main, after warmup) ──
+    # ── Detector (all ranks need it for REINFORCE loss in DDP) ──
     detector = None
-    if cfg.det_weight > 0 and is_main():
-        log.info(f"Loading AIGC detector from {cfg.detector_path}")
+    if cfg.det_weight > 0:
+        if is_main():
+            log.info(f"Loading AIGC detector from {cfg.detector_path}")
         detector = AIGCDetector(cfg.detector_path, device)
-        log.info(f"Detector ai_idx={detector.ai_idx}")
+        if is_main():
+            log.info(f"Detector ai_idx={detector.ai_idx}")
 
     # ── Dataset ──
-    bert_tok_path = str(Path(__file__).resolve().parent.parent / "tokenizer" / "bert-base-chinese")
+    bert_tok_path = "bert-base-chinese"
     qwen_tok_path = cfg.qwen_tokenizer_name or cfg.qwen_model_path
     if is_main():
         log.info(f"Loading dataset from {cfg.data_path}")
@@ -328,6 +330,36 @@ def train(cfg: StyleFlowConfig):
 
                 loss = loss_ce
 
+            # ── Detector reward loss (Eq. 5: L = L_CE + λ_det · P_AI) ──
+            # REINFORCE estimator: argmax decoding is non-differentiable,
+            # so we weight the log-probabilities of predicted tokens by
+            # the detector's P(AI) score as a policy-gradient signal.
+            det_loss_val = 0.0
+            if detector is not None and global_step >= cfg.det_warmup_steps:
+                with torch.no_grad():
+                    pred_ids = logits.argmax(dim=-1)
+                    pred_texts = bert_tokenizer.batch_decode(
+                        pred_ids, skip_special_tokens=True
+                    )
+                    pred_texts = [t.replace(" ", "") for t in pred_texts]
+                    p_ai = detector.score_texts(pred_texts)  # (B,)
+
+                log_probs = F.log_softmax(logits, dim=-1)
+                sel_log_probs = log_probs.gather(
+                    -1, pred_ids.unsqueeze(-1)
+                ).squeeze(-1)
+                pad_mask = (pred_ids != 0).float()
+                per_sample_lp = (
+                    (sel_log_probs * pad_mask).sum(dim=-1)
+                    / pad_mask.sum(dim=-1).clamp(min=1)
+                )
+
+                # REINFORCE with batch-mean baseline for variance reduction
+                advantage = (p_ai - p_ai.mean()).detach()
+                det_loss = (advantage * per_sample_lp).mean()
+                loss = loss + cfg.det_weight * det_loss
+                det_loss_val = p_ai.mean().item()
+
             scaled_loss = loss / cfg.grad_accum_steps
             scaler.scale(scaled_loss).backward()
 
@@ -354,9 +386,10 @@ def train(cfg: StyleFlowConfig):
                 pct = 100.0 * global_step / cfg.total_steps
                 eta_h, eta_m = divmod(int(remaining), 3600)
                 eta_m = eta_m // 60
+                det_str = f" det_p_ai={det_loss_val:.4f}" if det_loss_val > 0 else ""
                 log.info(
                     f"[{pct:5.1f}%] Step {global_step}/{cfg.total_steps} | "
-                    f"ce={loss_ce.item():.4f} | "
+                    f"ce={loss_ce.item():.4f}{det_str} | "
                     f"lr_bb={lr_cur:.2e} lr_new={lr_new:.2e} | "
                     f"gnorm={grad_norm:.3f} | "
                     f"ETA {eta_h}h{eta_m:02d}m"
@@ -434,8 +467,8 @@ def _save_checkpoint(model, optimizer, scheduler, step, cfg, vocab_size, save_di
 # ═══════════════════════════════════════════════════════════════════
 
 def main():
-    parser = argparse.ArgumentParser(description="Train StyleFlow")
-    parser.add_argument("--config", type=str, default="configs/styleflow.yaml")
+    parser = argparse.ArgumentParser(description="Train StyleShield")
+    parser.add_argument("--config", type=str, default="configs/styleshield.yaml")
     args = parser.parse_args()
     cfg = load_config(args.config)
     train(cfg)

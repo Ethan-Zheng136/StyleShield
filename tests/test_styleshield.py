@@ -1,8 +1,7 @@
-"""Tests for StyleFlow model, dataset, and loss computation.
+"""Tests for StyleShield model, dataset, and loss computation.
 
 Run:
-    cd /root/workspace/AIGC_FUCK_7
-    pytest tests/test_styleflow.py -v
+    pytest tests/test_styleshield.py -v
 """
 
 import json
@@ -17,14 +16,14 @@ import torch.nn.functional as F
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.config import StyleFlowConfig
+from src.config import StyleShieldConfig
 from src.model import (
     CrossAttentionAdapter,
     DDiTBlock,
     DDiTFinalLayer,
     EmbeddingLayer,
     GumbelProposal,
-    StyleFlowZh,
+    StyleShieldModel,
     TimestepEmbedder,
 )
 
@@ -35,7 +34,7 @@ from src.model import (
 
 @pytest.fixture
 def cfg():
-    c = StyleFlowConfig()
+    c = StyleShieldConfig()
     c.hidden_size = 64
     c.cond_dim = 32
     c.n_blocks = 2
@@ -58,7 +57,7 @@ def vocab_size():
 
 @pytest.fixture
 def model(cfg, vocab_size):
-    return StyleFlowZh(vocab_size, cfg)
+    return StyleShieldModel(vocab_size, cfg)
 
 
 @pytest.fixture
@@ -163,10 +162,10 @@ class TestCrossAttentionAdapter:
 
 
 # ═══════════════════════════════════════════════════════════════════
-#  StyleFlowZh Model Tests
+#  StyleShieldModel Tests
 # ═══════════════════════════════════════════════════════════════════
 
-class TestStyleFlowZh:
+class TestStyleShieldModel:
     def test_init(self, model, cfg, vocab_size):
         assert len(model.blocks) == cfg.n_blocks
         assert len(model.cross_attn_adapters) == cfg.n_blocks
@@ -227,7 +226,7 @@ class TestStyleFlowZh:
     def test_zero_init_cross_attn_equals_no_cond(self, cfg, vocab_size):
         """At init, model with cond should produce same output as without cond
         (because cross-attn gates are zero-initialized)."""
-        model = StyleFlowZh(vocab_size, cfg)
+        model = StyleShieldModel(vocab_size, cfg)
         model.eval()
 
         z = torch.randn(1, 8, cfg.hidden_size)
@@ -409,13 +408,9 @@ class TestPairDataset:
         return data_path
 
     def test_load(self, synthetic_data):
-        bert_tok = os.path.join(
-            os.path.dirname(__file__), "..", "tokenizer", "bert-base-chinese"
-        )
-        if not os.path.exists(bert_tok):
-            pytest.skip("bert-base-chinese tokenizer not found locally")
+        bert_tok = "bert-base-chinese"
 
-        qwen_tok = "/root/workspace/AIGC_FUCK/models/Qwen2.5-7B-Instruct"
+        qwen_tok = "models/Qwen2.5-7B-Instruct"
         if not os.path.exists(qwen_tok):
             pytest.skip("Qwen tokenizer not available")
 
@@ -444,7 +439,7 @@ class TestPairDataset:
 
 class TestConfig:
     def test_defaults(self):
-        cfg = StyleFlowConfig()
+        cfg = StyleShieldConfig()
         assert cfg.hidden_size == 768
         assert cfg.qwen_hidden_size == 3584
         assert cfg.n_blocks == 12

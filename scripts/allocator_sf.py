@@ -1,7 +1,7 @@
-"""StyleFlow Allocator: 可控 AIGC 检测率的长文本改写系统
+"""StyleShield Allocator: 可控 AIGC 检测率的长文本改写系统
 
-将 StyleFlow (SDEdit + Qwen conditioning) 集成到 allocator 框架中。
-与旧版 LLaMA-SFT allocator 不同，StyleFlow 支持：
+将 StyleShield (SDEdit + Qwen conditioning) 集成到 allocator 框架中。
+与旧版 LLaMA-SFT allocator 不同，StyleShield 支持：
   - gamma 控制改写强度（连续可调）
   - 多次重试选最优（SDEdit 有随机性，每次结果不同）
   - 自适应 gamma 搜索（先小 gamma 尝试，不够再加大）
@@ -10,7 +10,7 @@
   1. 按句子/段落将长文本分成 chunks
   2. 用 AIGC 检测器给每个 chunk 打分
   3. 按 P(AI) 从高到低排序，优先改写"最像 AI"的 chunk
-  4. 对每个选中的 chunk：用 StyleFlow 多次尝试不同 gamma，
+  4. 对每个选中的 chunk：用 StyleShield 多次尝试不同 gamma，
      选择 P(AI) 最低且文本质量可接受的版本
   5. 贪心累加，直到整体加权 P(AI) 逼近目标 rate
   6. 拼接输出
@@ -45,14 +45,14 @@ from transformers import (
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.config import StyleFlowConfig
-from src.model import StyleFlowZh
+from src.config import StyleShieldConfig
+from src.model import StyleShieldModel
 from src.qwen_encoder import QwenHiddenExtractor
 
 
-DETECTOR_PATH = "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3"
-CKPT_PATH = "/root/workspace/AIGC_FUCK_7/experiments/styleflow_v2/checkpoints/step_30000.pt"
-OUTPUT_DIR = "/root/workspace/AIGC_FUCK_7/allocator_results"
+DETECTOR_PATH = "models/AIGC_detector_zhv3"
+CKPT_PATH = "experiments/styleflow_v2/checkpoints/step_30000.pt"
+OUTPUT_DIR = "allocator_results"
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -140,16 +140,16 @@ def chunk_text(text: str, method: str = "sentence",
 #  Model Loading
 # ═══════════════════════════════════════════════════════════════════
 
-class StyleFlowPipeline:
-    """Encapsulates StyleFlow model + Qwen encoder + detector."""
+class StyleShieldPipeline:
+    """Encapsulates StyleShield model + Qwen encoder + detector."""
 
     def __init__(self, ckpt_path: str, detector_path: str,
                  device: torch.device = None):
         self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        print(f"[Pipeline] Loading StyleFlow from {ckpt_path}")
-        cfg = StyleFlowConfig()
-        model, vocab_size, cfg = StyleFlowZh.from_langflow_ckpt(ckpt_path, cfg, self.device)
+        print(f"[Pipeline] Loading StyleShield from {ckpt_path}")
+        cfg = StyleShieldConfig()
+        model, vocab_size, cfg = StyleShieldModel.from_langflow_ckpt(ckpt_path, cfg, self.device)
         self.model = model.to(self.device).eval()
         self.cfg = cfg
 
@@ -162,7 +162,7 @@ class StyleFlowPipeline:
         self.qwen_encoder = QwenHiddenExtractor(qwen_raw, split_layer=cfg.qwen_split_layer)
         self.qwen_encoder.eval()
 
-        bert_tok_path = str(Path(__file__).resolve().parent.parent / "tokenizer" / "bert-base-chinese")
+        bert_tok_path = "bert-base-chinese"
         self.bert_tokenizer = AutoTokenizer.from_pretrained(bert_tok_path)
         qwen_tok_path = cfg.qwen_tokenizer_name or cfg.qwen_model_path
         self.qwen_tokenizer = AutoTokenizer.from_pretrained(qwen_tok_path, trust_remote_code=True)
@@ -302,7 +302,7 @@ def weighted_chunk_rate(chunks: list[Chunk]) -> float:
 def allocate_and_rewrite(
     text: str,
     target_rate: float,
-    pipeline: StyleFlowPipeline,
+    pipeline: StyleShieldPipeline,
     chunk_method: str = "sentence",
     chunk_size: int = 500,
     num_steps: int = 32,
@@ -414,7 +414,7 @@ def allocate_and_rewrite(
 
 def _build_result(chunks: list[Chunk], target_rate: float,
                   original_text: str, t_start: float,
-                  pipeline: StyleFlowPipeline = None,
+                  pipeline: StyleShieldPipeline = None,
                   verbose: bool = False) -> dict:
     final_text = "\n".join(c.final_text for c in chunks)
     achieved_rate = weighted_chunk_rate(chunks)
@@ -461,7 +461,7 @@ def _build_result(chunks: list[Chunk], target_rate: float,
 
     if verbose:
         print(f"\n{'='*60}")
-        print(f"  StyleFlow Allocator 结果 (逐段检测)")
+        print(f"  StyleShield Allocator 结果 (逐段检测)")
         print(f"{'='*60}")
         print(f"  目标 AIGC 疑似率:     {target_rate}%")
         print(f"  达成 AIGC 疑似率:     {stats['achieved_rate_weighted']}%  "
@@ -499,7 +499,7 @@ def _build_result(chunks: list[Chunk], target_rate: float,
 
 def parse_args():
     p = argparse.ArgumentParser(
-        description="StyleFlow Allocator: 可控 AIGC rate 的长文本改写",
+        description="StyleShield Allocator: 可控 AIGC rate 的长文本改写",
     )
     p.add_argument("--text", type=str, default=None, help="直接传入文本")
     p.add_argument("--text_file", type=str, default=None, help="从文件读取文本")
@@ -538,13 +538,13 @@ def main():
         sys.exit(1)
 
     print(f"\n{'='*60}")
-    print(f"  StyleFlow Allocator")
+    print(f"  StyleShield Allocator")
     print(f"  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print(f"  输入文本: {len(text)} 字")
     print(f"  目标 AIGC rate: {args.target_rate}%")
     print(f"{'='*60}")
 
-    pipeline = StyleFlowPipeline(
+    pipeline = StyleShieldPipeline(
         ckpt_path=args.ckpt,
         detector_path=args.detector_path,
     )

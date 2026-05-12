@@ -23,13 +23,13 @@ from transformers import (
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.config import StyleFlowConfig
-from src.model import StyleFlowZh
+from src.config import StyleShieldConfig
+from src.model import StyleShieldModel
 from src.qwen_encoder import QwenHiddenExtractor
 
-TEST_SET = "/root/workspace/AIGC_FUCK/test_set_1000.jsonl"
-QWEN_PATH = "/root/workspace/AIGC_FUCK/models/Qwen2.5-7B-Instruct"
-DETECTOR_PATH = "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3"
+TEST_SET = "data/test_set_1000.jsonl"
+QWEN_PATH = "models/Qwen2.5-7B-Instruct"
+DETECTOR_PATH = "models/AIGC_detector_zhv3"
 CKPT_DIR = "experiments/ablation_split21/checkpoints"
 SPLIT_LAYER = 21
 GAMMA = 6.5
@@ -53,7 +53,7 @@ def main():
     samples = load_test_data(N_SAMPLES)
     print(f"Loaded {len(samples)} test samples")
 
-    bert_tok_path = str(Path(__file__).resolve().parent.parent / "tokenizer" / "bert-base-chinese")
+    bert_tok_path = "bert-base-chinese"
     bert_tokenizer = AutoTokenizer.from_pretrained(bert_tok_path)
     qwen_tokenizer = AutoTokenizer.from_pretrained(QWEN_PATH, trust_remote_code=True)
 
@@ -92,8 +92,8 @@ def main():
             del model
             torch.cuda.empty_cache()
 
-        cfg = StyleFlowConfig()
-        model, vocab_size, cfg = StyleFlowZh.from_langflow_ckpt(str(ckpt), cfg, DEVICE)
+        cfg = StyleShieldConfig()
+        model, vocab_size, cfg = StyleShieldModel.from_langflow_ckpt(str(ckpt), cfg, DEVICE)
         model = model.to(DEVICE).eval()
 
         p_ais = []

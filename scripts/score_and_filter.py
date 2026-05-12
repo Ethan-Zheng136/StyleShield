@@ -21,7 +21,7 @@ import torch
 from tqdm import tqdm
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-DETECTOR_PATH = "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3"
+DETECTOR_PATH = "models/AIGC_detector_zhv3"
 
 
 def score_batch(texts: list[str], model, tokenizer, device,

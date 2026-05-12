@@ -1,4 +1,4 @@
-"""Tests for StyleFlow allocator chunking and allocation logic."""
+"""Tests for StyleShield allocator chunking and allocation logic."""
 
 import sys
 import os

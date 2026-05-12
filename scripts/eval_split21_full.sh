@@ -3,7 +3,7 @@
 # Run on cluster with single GPU:
 #   bash scripts/eval_split21_full.sh
 
-cd /root/workspace/AIGC_FUCK_7
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" && cd "$SCRIPT_DIR/.."
 
 python scripts/eval_acl.py \
     --ckpt experiments/ablation_split21/checkpoints/step_5000.pt \

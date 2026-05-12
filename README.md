@@ -2,7 +2,7 @@
 
 **Continuous and Controllable Style Transfer for Evading AI-Generated Content Detectors**
 
-> EMNLP 2026 Submission
+> Anonymous Submission
 
 <p align="center">
   <img src="assets/fig1_architecture.png" width="85%" alt="StyleShield Architecture">
@@ -61,7 +61,7 @@ src/
   dataset.py          AI-human parallel pair dataset
   config.py           All hyperparameters
 scripts/
-  train_styleflow.py  DDP training (128×A800)
+  train.py            DDP training (128×A800)
   transfer.py         Single-sample inference
   eval_acl.py         Multi-detector evaluation
   allocator_sf.py     RateAudit: long-document scheduling
@@ -71,7 +71,7 @@ paper/                LaTeX source
 
 ## Checkpoints
 
-Model weights are available on HuggingFace Hub (link upon acceptance).
+Model weights are available on HuggingFace Hub (link upon acceptance). Due to anonymity requirements, model weights will be released after the review process. Reviewers may contact the area chair for early access.
 
 | Checkpoint | Description |
 |---|---|
@@ -84,3 +84,17 @@ Model weights are available on HuggingFace Hub (link upon acceptance).
 
 StyleShield includes **RateAudit**, a document-level diagnostic that demonstrates any pre-specified detection rate can be achieved on arbitrarily long texts. Given a target rate (e.g., 30%), RateAudit greedily rewrites only the highest-P(AI) chunks, shifting the aggregate score while leaving the majority of the document untouched.
 
+## Citation
+
+```bibtex
+@inproceedings{styleshield2026,
+  title={StyleShield: Continuous and Controllable Style Transfer
+         for Evading AI-Generated Content Detectors},
+  author={Anonymous},
+  year={2026}
+}
+```
+
+## License
+
+Apache-2.0

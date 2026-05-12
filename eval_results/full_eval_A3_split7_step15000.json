@@ -1,7 +1,7 @@
 {
   "method": "StyleShield (step_15000)",
   "config": {
-    "test_set": "/root/workspace/AIGC_FUCK/test_set_1000.jsonl",
+    "test_set": "./data/test_set_1000.jsonl",
     "n_samples": 1000,
     "detectors": [
       "zhv3",

@@ -19,12 +19,12 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from tqdm import tqdm
 
 
-QWEN_PATH = "/root/workspace/AIGC_FUCK/models/Qwen2.5-7B-Instruct"
-OUTPUT_DIR = "/root/workspace/AIGC_FUCK"
+QWEN_PATH = "models/Qwen2.5-7B-Instruct"
+OUTPUT_DIR = "data/"
 
 RAW_DATA = {
-    "news": "/root/workspace/AIGC_FUCK/raw_news_human.jsonl",
-    "academic": "/root/workspace/AIGC_FUCK/raw_academic_human.jsonl",
+    "news": "data/raw_news_human.jsonl",
+    "academic": "data/raw_academic_human.jsonl",
 }
 
 REWRITE_NEWS_PROMPT = """请用规范、正式的语言重写以下新闻报道，保持核心内容和事实不变，但使用标准的书面语体。

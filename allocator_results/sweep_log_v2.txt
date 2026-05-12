@@ -1,16 +1,23 @@
-/opt/conda/lib/python3.11/site-packages/torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+torch/cuda/__init__.py:61: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
   import pynvml  # type: ignore[import]
 [transformers] `torch_dtype` is deprecated! Use `dtype` instead!
 输入文本: 10517 字
 目标 rate 列表: [10, 20, 30, 40, 50, 60]
 gammas: [6.0, 6.5, 7.0, 7.5], num_steps: 64, retries: 3
 ======================================================================
-[Pipeline] Loading StyleFlow from /root/workspace/AIGC_FUCK_7/experiments/styleflow_v2/checkpoints/step_30000.pt
+[Pipeline] Loading StyleFlow from ./experiments/styleflow_v2/checkpoints/step_30000.pt
 [StyleFlow] Loaded 209 params from LangFlow, skipped 0, new params: 0
-[Pipeline] Loading Qwen encoder from /root/workspace/AIGC_FUCK/models/Qwen2.5-7B-Instruct
-Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]Loading weights:  28%|██▊       | 96/339 [00:00<00:00, 900.85it/s]Loading weights:  55%|█████▌    | 187/339 [00:00<00:00, 697.20it/s]Loading weights:  89%|████████▉ | 301/339 [00:00<00:00, 856.27it/s]Loading weights: 100%|██████████| 339/339 [00:00<00:00, 853.01it/s]
-[Pipeline] Loading detector from /root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3
-Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 32040.71it/s]
+[Pipeline] Loading Qwen encoder from ./models/models/Qwen2.5-7B-Instruct
+
+Loading weights:   0%|          | 0/339 [00:00<?, ?it/s]
+Loading weights:  28%|██▊       | 96/339 [00:00<00:00, 900.85it/s]
+Loading weights:  55%|█████▌    | 187/339 [00:00<00:00, 697.20it/s]
+Loading weights:  89%|████████▉ | 301/339 [00:00<00:00, 856.27it/s]
+Loading weights: 100%|██████████| 339/339 [00:00<00:00, 853.01it/s]
+[Pipeline] Loading detector from ./models/models/AIGC_detector_zhv3
+
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]
+Loading weights: 100%|██████████| 201/201 [00:00<00:00, 32040.71it/s]
 
 ======================================================================
   TARGET RATE = 10%
@@ -805,4 +812,4 @@ gammas: [6.0, 6.5, 7.0, 7.5], num_steps: 64, retries: 3
      50%      50.6%   11/23    11/23   11/23    50.2%   152.5s
      60%      64.0%    8/23     8/23    8/23    36.6%   109.9s
 
-汇总保存: /root/workspace/AIGC_FUCK_7/allocator_results/sweep/summary.json
+汇总保存: ./allocator_results/sweep/summary.json

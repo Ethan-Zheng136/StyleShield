@@ -25,7 +25,7 @@ if [ -z "$DOMAIN" ] || [ "$NUM" -eq 0 ]; then
     exit 1
 fi
 
-cd /root/workspace/AIGC_FUCK_7
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" && cd "$SCRIPT_DIR/.."
 
 PER_WORKER=$((NUM / GPUS))
 
@@ -74,7 +74,7 @@ while true; do
 
     echo "--- Progress at $(date '+%H:%M:%S') ---"
     for ((i=0; i<GPUS; i++)); do
-        WFILE="/root/workspace/AIGC_FUCK/dataset_${DOMAIN}_pairs_w${i}.jsonl"
+        WFILE="data/dataset_${DOMAIN}_pairs_w${i}.jsonl"
         if [ -f "$WFILE" ]; then
             COUNT=$(wc -l < "$WFILE")
         else
@@ -111,13 +111,13 @@ fi
 # Merge worker outputs (only if at least one worker produced data)
 echo ""
 echo "Merging worker outputs..."
-FINAL="/root/workspace/AIGC_FUCK/dataset_${DOMAIN}_pairs.jsonl"
+FINAL="data/dataset_${DOMAIN}_pairs.jsonl"
 MERGE_TMP="${FINAL}.tmp"
 > "$MERGE_TMP"
 TOTAL=0
 MISSING=0
 for ((i=0; i<GPUS; i++)); do
-    WFILE="/root/workspace/AIGC_FUCK/dataset_${DOMAIN}_pairs_w${i}.jsonl"
+    WFILE="data/dataset_${DOMAIN}_pairs_w${i}.jsonl"
     if [ -f "$WFILE" ] && [ -s "$WFILE" ]; then
         COUNT=$(wc -l < "$WFILE")
         echo "  Worker $i: $COUNT pairs"

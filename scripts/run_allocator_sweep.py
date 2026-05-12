@@ -12,11 +12,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scripts.allocator_sf import StyleFlowPipeline, allocate_and_rewrite
+from scripts.allocator_sf import StyleShieldPipeline, allocate_and_rewrite
 
-TEXT_FILE = "/root/workspace/AIGC_FUCK_3_LLaMA/test_ai_10k_zhihu.txt"
+TEXT_FILE = "data/test_ai_10k_zhihu.txt"
 TARGET_RATES = [10, 20, 30, 40, 50, 60]
-OUTPUT_DIR = "/root/workspace/AIGC_FUCK_7/allocator_results/sweep"
+OUTPUT_DIR = "allocator_results/sweep"
 GAMMAS = [6.0, 6.5, 7.0, 7.5]
 NUM_STEPS = 64
 RETRIES = 3
@@ -32,9 +32,9 @@ def main():
     print(f"gammas: {GAMMAS}, num_steps: {NUM_STEPS}, retries: {RETRIES}")
     print("=" * 70)
 
-    pipeline = StyleFlowPipeline(
-        ckpt_path="/root/workspace/AIGC_FUCK_7/experiments/styleflow_v2/checkpoints/step_30000.pt",
-        detector_path="/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3",
+    pipeline = StyleShieldPipeline(
+        ckpt_path="experiments/styleflow_v2/checkpoints/step_30000.pt",
+        detector_path="models/AIGC_detector_zhv3",
     )
 
     summary_rows = []

@@ -28,8 +28,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from tqdm import tqdm
 
 
-QWEN_PATH = "/root/workspace/AIGC_FUCK/models/Qwen2.5-7B-Instruct"
-OUTPUT_DIR = "/root/workspace/AIGC_FUCK"
+QWEN_PATH = "models/Qwen2.5-7B-Instruct"
+OUTPUT_DIR = "data/"
 
 PREFERRED_NEWS_CATEGORIES = ["社会", "教育", "科技", "财经", "时政", "家居", "娱乐"]
 

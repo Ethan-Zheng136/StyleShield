@@ -2,7 +2,7 @@
 # ACL 完整评估流水线 — 在 tmux 中运行
 # 包含：StyleShield 评估 + 3 个 baseline + 消融配置生成 + 跨域数据准备 + 人工评估问卷
 set -e
-cd /root/workspace/AIGC_FUCK_7
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" && cd "$SCRIPT_DIR/.."
 
 LOG_DIR="eval_results"
 mkdir -p "$LOG_DIR"
@@ -58,7 +58,7 @@ echo "[Step 5/7] Generating ablation training configs..."
 python3 << 'PYEOF'
 import yaml, os, copy
 
-base_path = "configs/styleflow.yaml"
+base_path = "configs/styleshield.yaml"
 with open(base_path) as f:
     base = yaml.safe_load(f)
 
@@ -68,9 +68,9 @@ ablations = {
         "det_warmup_steps": 999999,
         "save_dir": "./experiments/ablation_no_detector/checkpoints",
     },
-    "ablation_zhihu_only": {
-        "data_path": "/root/workspace/AIGC_FUCK/dataset_zhihu_pairs_full.jsonl",
-        "save_dir": "./experiments/ablation_zhihu_only/checkpoints",
+    "ablation_single_domain": {
+        "data_path": "data/dataset_zhihu_pairs_full.jsonl",
+        "save_dir": "./experiments/ablation_single_domain/checkpoints",
     },
     "ablation_split_layer_7": {
         "qwen_split_layer": 7,
@@ -103,8 +103,8 @@ python3 << 'PYEOF'
 import json, os, torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-QWEN = "/root/workspace/AIGC_FUCK/models/Qwen2.5-7B-Instruct"
-OUT_DIR = "/root/workspace/AIGC_FUCK"
+QWEN = "models/Qwen2.5-7B-Instruct"
+OUT_DIR = "data/"
 OUT_FILE = os.path.join(OUT_DIR, "test_cross_domain.jsonl")
 
 domains = {

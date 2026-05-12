@@ -1,4 +1,4 @@
-"""Comprehensive evaluation of StyleFlow step_30000.
+"""Comprehensive evaluation of StyleShield step_30000.
 
 Metrics:
   1. Detector Evasion Rate: % of samples where P(AI) < threshold after transfer
@@ -25,15 +25,15 @@ from transformers import AutoModelForCausalLM, AutoModelForSequenceClassificatio
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.config import StyleFlowConfig
-from src.model import StyleFlowZh
+from src.config import StyleShieldConfig
+from src.model import StyleShieldModel
 from src.qwen_encoder import QwenHiddenExtractor
 
 
 CKPT = os.environ.get("EVAL_CKPT", "experiments/styleflow_v2/checkpoints/step_5000.pt")
-DATA = os.environ.get("EVAL_DATA", "/root/workspace/AIGC_FUCK/dataset_multidomain.jsonl")
-DETECTOR = "/root/workspace/AIGC_FUCK/models/AIGC_detector_zhv3"
-QWEN_PATH = "/root/workspace/AIGC_FUCK/models/Qwen2.5-7B-Instruct"
+DATA = os.environ.get("EVAL_DATA", "data/dataset_multidomain.jsonl")
+DETECTOR = "models/AIGC_detector_zhv3"
+QWEN_PATH = "models/Qwen2.5-7B-Instruct"
 N_SAMPLES = 50
 GAMMAS = [5.0, 5.5, 6.0, 6.5, 7.0]
 NUM_STEPS = 64
@@ -91,8 +91,8 @@ def main():
     print(f"Selected {len(samples)} samples for evaluation")
 
     print("Loading models...")
-    cfg = StyleFlowConfig()
-    model, vocab_size, cfg = StyleFlowZh.from_langflow_ckpt(CKPT, cfg, device)
+    cfg = StyleShieldConfig()
+    model, vocab_size, cfg = StyleShieldModel.from_langflow_ckpt(CKPT, cfg, device)
     model = model.to(device).eval()
 
     qwen_raw = AutoModelForCausalLM.from_pretrained(
@@ -101,7 +101,7 @@ def main():
     qwen_encoder = QwenHiddenExtractor(qwen_raw, split_layer=cfg.qwen_split_layer)
     qwen_encoder.eval()
 
-    bert_tok_path = str(Path(__file__).resolve().parent.parent / "tokenizer" / "bert-base-chinese")
+    bert_tok_path = "bert-base-chinese"
     bert_tok = AutoTokenizer.from_pretrained(bert_tok_path)
     qwen_tok = AutoTokenizer.from_pretrained(cfg.qwen_model_path, trust_remote_code=True)
 

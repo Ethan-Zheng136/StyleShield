@@ -1,8 +1,8 @@
 batch_size: 8
 bias_warmup_steps: 0
-data_path: data/train_pairs.jsonl
-det_warmup_steps: 999999
-det_weight: 0.0
+data_path: data/train_pairs_zhihu.jsonl
+det_warmup_steps: 5000
+det_weight: 0.1
 detector_path: models/AIGC_detector_zhv3
 eval_every_steps: 2500
 grad_accum_steps: 1
@@ -15,7 +15,7 @@ model_length: 512
 num_workers: 4
 qwen_model_path: models/Qwen2.5-7B-Instruct
 qwen_split_layer: 14
-save_dir: ./experiments/ablation_no_detector/checkpoints
+save_dir: ./experiments/ablation_single_domain/checkpoints
 save_every_steps: 5000
 total_steps: 60000
 warmup_steps: 1000
