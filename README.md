@@ -84,17 +84,4 @@ Model weights are available on HuggingFace Hub (link upon acceptance). Due to an
 
 StyleShield includes **RateAudit**, a document-level diagnostic that demonstrates any pre-specified detection rate can be achieved on arbitrarily long texts. Given a target rate (e.g., 30%), RateAudit greedily rewrites only the highest-P(AI) chunks, shifting the aggregate score while leaving the majority of the document untouched.
 
-## Citation
 
-```bibtex
-@inproceedings{styleshield2026,
-  title={StyleShield: Continuous and Controllable Style Transfer
-         for Evading AI-Generated Content Detectors},
-  author={Anonymous},
-  year={2026}
-}
-```
-
-## License
-
-Apache-2.0
