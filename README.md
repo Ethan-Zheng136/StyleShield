@@ -49,7 +49,7 @@ pip install -r requirements.txt
 python scripts/transfer.py \
     --ckpt checkpoints/step_30000.pt \
     --gamma 6.5 \
-    --input "你要转换的AI生成文本"
+    --input "your chinese-text"
 ```
 
 ## Project Structure
