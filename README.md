@@ -47,8 +47,8 @@ Built on a Diffusion Transformer (DiT) backbone with flow matching, StyleShield 
 pip install -r requirements.txt
 
 python scripts/transfer.py \
-    --ckpt checkpoints/step_30000.pt \
-    --gamma 6.5 \
+    --ckpt checkpoints/<ANY_RELEASED_CKPT>.pt \
+    --gamma <YOUR_CHOICE(7.0 for example)> \
     --input "your chinese-text"
 ```
 
