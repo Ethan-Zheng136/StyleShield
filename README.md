@@ -66,7 +66,6 @@ scripts/
   eval_acl.py         Multi-detector evaluation
   allocator_sf.py     RateAudit: long-document scheduling
 configs/              Training YAML configs (full model + 5 ablations)
-paper/                LaTeX source
 ```
 
 ## Checkpoints
