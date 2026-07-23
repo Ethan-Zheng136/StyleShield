@@ -61,7 +61,7 @@ src/
   dataset.py          AI-human parallel pair dataset
   config.py           All hyperparameters
 scripts/
-  train.py            DDP training (128×A800)
+  train.py            DDP training (16×A800)
   transfer.py         Single-sample inference
   eval_acl.py         Multi-detector evaluation
   allocator_sf.py     RateAudit: long-document scheduling

@@ -55,8 +55,8 @@ class StyleShieldConfig:
     weight_decay: float = 0.01
     warmup_steps: int = 1000
     total_steps: int = 100_000
-    batch_size: int = 8
-    grad_accum_steps: int = 2
+    batch_size: int = 64
+    grad_accum_steps: int = 1
     max_grad_norm: float = 1.0
 
     # ── Data ──
