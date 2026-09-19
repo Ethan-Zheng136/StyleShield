@@ -2,7 +2,7 @@
 
 **Continuous and Controllable Style Transfer for Evading AI-Generated Content Detectors**
 
-> [paper](https://arxiv.org/abs/2605.00924)
+> [Arxiv](https://arxiv.org/abs/2605.00924)
 
 <p align="center">
   <img src="assets/fig1_architecture.png" width="85%" alt="StyleShield Architecture">
